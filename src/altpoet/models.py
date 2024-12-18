@@ -3,7 +3,10 @@ from django.db import models
 
 
 class Project(models.Model):
-    ''' for example, Project Gutenberg '''
+    ''' for example, Project Gutenberg. The Project object holds constants that otherwise would
+    have to be repeated in every Document. For example, you could have a "local" object to work
+    with files on your machine, or a "DP Canada" to work with their files. We're not coding 
+    anything yet for EPUB files, but this object might be useful to represent an EPUB'''
     
     # for example, "Project Gutenberg"
     name = models.CharField(max_length=80, null=False)
@@ -15,26 +18,29 @@ class Project(models.Model):
     basepath = models.CharField(max_length=80, default="/{item)")
 
 
-class Page(models.Model):
-    ''' representation of a a book or a webpage '''
+class Document(models.Model):
+    ''' (HTML) representation of a book or a webpage '''
 
-    #a project that the page is part of. if null, then the item must 
-    project = models.ForeignKey("Project", null=True, related_name='pages',
+    #a project that the document is part of. if null, then the item must 
+    project = models.ForeignKey("Project", null=True, related_name='documents',
         on_delete=models.SET_NULL)
 
     # the identifier within the project. Or the full URL if no project
+    # for Project Gutenberg, item is the Project Gutenberg ID
     item = models.CharField(max_length=80, default="/{item)")
     
-    # a url set by the base of the Page (Image urls are always relative to this base,
-    # which in turn, is always relative the the page it is in
+    # a url set by the base of the Document (Image urls are always relative to this base,
+    # which in turn, is always relative the the document it is in
     base = models.CharField(max_length=80, default="")
     
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
     
 class Img(models.Model):
-    # page that contains the image
-    page = models.ForeignKey("Page", null=False, related_name='imgs',
+    """ This is an img element in an HTML document.
+    """
+    # document that contains the image
+    document = models.ForeignKey("Document", null=True, related_name='imgs',
         on_delete=models.CASCADE)
 
     # 
@@ -59,6 +65,11 @@ class Img(models.Model):
 
 
 class Image(models.Model):
+    """ This deals with image file, to allow multiple references to the same image.
+    The hash allows us to identify duplicate images used across documents - I've seen hundreds of
+    references to the same image in some collections. Often these are images of single characters,
+    buttons or decorative images.
+    """
     # always relative to the 'base' of the img base
     url = models.CharField(max_length=80)
     
@@ -67,15 +78,23 @@ class Image(models.Model):
 
 
 class Alt(models.Model):
+    """This model represents alt text entries and proposed alt text entries
+    """
     # alt text for the image
     text = models.CharField(max_length=1000, default="")
     
-    # where did the alt text come from? if null, it came with the page
+    # the img that this alt-text pertains to
+    img = models.ForeignKey("Img", null=True, related_name='alts',  on_delete=models.CASCADE)
+    
+    # where did the alt text come from? if null, it came with the document
     source = models.ForeignKey("Agent", null=True, related_name='alts',  on_delete=models.SET_NULL)
     
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
 class Agent(models.Model):
+    """This model represents creators of alt text. Could be a person, (a user) 
+    or perhaps an AI, in which case user could be null.
+    """
     # entity supplying the alt text
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
         null=True, related_name='agents')    
