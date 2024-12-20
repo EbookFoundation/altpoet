@@ -9,10 +9,10 @@ class Project(models.Model):
     anything yet for EPUB files, but this object might be useful to represent an EPUB'''
     
     # for example, "Project Gutenberg"
-    name = models.CharField(max_length=80, null=False)
+    name = models.CharField(max_length=80, null=False, default="")
 
     # for example, "https://www.gutenberg.org"
-    url = models.CharField(max_length=80, default="")
+    url = models.CharField(max_length=80, unique=True)
 
     # a template string for example, "/cache/epub/{item}/pg{item}-images.html"
     basepath = models.CharField(max_length=80, default="/{item)")
@@ -27,20 +27,24 @@ class Document(models.Model):
 
     # the identifier within the project. Or the full URL if no project
     # for Project Gutenberg, item is the Project Gutenberg ID
-    item = models.CharField(max_length=80, default="/{item)")
+    item = models.CharField(max_length=80, default="")
     
     # a url set by the base of the Document (Image urls are always relative to this base,
-    # which in turn, is always relative the the document it is in
+    # which in turn, is either absolute or relative to the document it is in
     base = models.CharField(max_length=80, default="")
     
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['project', 'item'], name="doc_unique_in_project"),
+        ]
     
 class Img(models.Model):
     """ This is an img element in an HTML document.
     """
     # document that contains the image
-    document = models.ForeignKey("Document", null=True, related_name='imgs',
+    document = models.ForeignKey("Document", null=False, related_name='imgs',
         on_delete=models.CASCADE)
 
     # 
@@ -48,20 +52,25 @@ class Img(models.Model):
 
 
     # the id set on the img element
-    img_id = models.CharField(max_length=80, null=True)
+    img_id = models.CharField(max_length=80, null=False)
 
     # whether the associated image is normal (0), purely decorative (1), a cover (2),  
     # button (3), other? (-1)
     img_type = models.IntegerField(default=0)
 
     # whether the associated image is inside a figure element.
-    is_figure = models.BooleanField
+    is_figure = models.BooleanField(default=False)
     
     # if the associated image is described by something else. If so, an id
     described_by = models.CharField(max_length=80, null=True)
 
     # this is the preferred alt
     alt = models.ForeignKey("Image", null=True, related_name='imgs', on_delete=models.SET_NULL)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['document', 'img_id'], name="img_unique_in_doc"),
+        ]
 
 
 class Image(models.Model):
@@ -70,8 +79,8 @@ class Image(models.Model):
     references to the same image in some collections. Often these are images of single characters,
     buttons or decorative images.
     """
-    # always relative to the 'base' of the img base
-    url = models.CharField(max_length=80)
+    # always absolute
+    url = models.CharField(max_length=1024)
     
     # hash of the image
     hash = models.CharField(max_length=32)
@@ -81,7 +90,7 @@ class Alt(models.Model):
     """This model represents alt text entries and proposed alt text entries
     """
     # alt text for the image
-    text = models.CharField(max_length=1000, default="")
+    text = models.CharField(max_length=2000, default="")
     
     # the img that this alt-text pertains to
     img = models.ForeignKey("Img", null=True, related_name='alts',  on_delete=models.CASCADE)
