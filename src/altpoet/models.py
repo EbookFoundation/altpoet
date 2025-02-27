@@ -16,7 +16,9 @@ class Project(models.Model):
 
     # a template string for example, "/cache/epub/{item}/pg{item}-images.html"
     basepath = models.CharField(max_length=80, default="/{item)")
-
+    
+    def __str__(self):
+        return self.name
 
 class Document(models.Model):
     ''' (HTML) representation of a book or a webpage '''
@@ -35,6 +37,9 @@ class Document(models.Model):
     
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
+    def __str__(self):
+        return f'{self.item} in {self.project}'
+    
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['project', 'item'], name="doc_unique_in_project"),
@@ -67,6 +72,9 @@ class Img(models.Model):
     # this is the preferred alt
     alt = models.ForeignKey("Image", null=True, related_name='imgs', on_delete=models.SET_NULL)
 
+    def __str__(self):
+        return f'{self.img_id} in {self.document}'
+
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['document', 'img_id'], name="img_unique_in_doc"),
@@ -84,6 +92,9 @@ class Image(models.Model):
     
     # hash of the image
     hash = models.CharField(max_length=32)
+        
+    def __str__(self):
+        return self.url
 
 
 class Alt(models.Model):
@@ -99,6 +110,8 @@ class Alt(models.Model):
     source = models.ForeignKey("Agent", null=True, related_name='alts',  on_delete=models.SET_NULL)
     
     created = models.DateTimeField(auto_now_add=True, db_index=True)
+    def __str__(self):
+        return f'alt for {self.img} in {self.img.document}'
 
 class Agent(models.Model):
     """This model represents creators of alt text. Could be a person, (a user) 
