@@ -8,8 +8,9 @@ django = "*"
 djangorestframework = "*"
 markdown = "*"
 django-filter = "*"
+psycopg2 = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.6"
+python_version = "3.9"
