@@ -104,7 +104,7 @@ celerybeat.pid
 
 
 # Environments
-.env
+#.env
 
 
 local_settings.py
