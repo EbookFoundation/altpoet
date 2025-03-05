@@ -1,3 +1,5 @@
+from urllib.parse import urljoin
+
 from django.conf import settings
 from django.db import models
 
@@ -31,11 +33,17 @@ class Document(models.Model):
     # for Project Gutenberg, item is the Project Gutenberg ID
     item = models.CharField(max_length=80, default="")
     
-    # a url set by the base of the Document (Image urls are always relative to this base,
-    # which in turn, is either absolute or relative to the document it is in
+    # a url set by the base of the Document (img src is  relative to this base, which is absolute
     base = models.CharField(max_length=80, default="")
     
     created = models.DateTimeField(auto_now_add=True, db_index=True)
+    
+    @property
+    def url(self):
+        if self.project:
+            return urljoin(self.project.url, self.project.basepath % {'item':self.item})
+        return self.base
+    
 
     def __str__(self):
         return f'{self.item} in {self.project}'
@@ -112,6 +120,7 @@ class Alt(models.Model):
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     def __str__(self):
         return f'alt for {self.img} in {self.img.document}'
+
 
 class Agent(models.Model):
     """This model represents creators of alt text. Could be a person, (a user) 
