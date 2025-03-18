@@ -109,3 +109,8 @@ celerybeat.pid
 
 
 local_settings.py
+
+# Build 
+
+bin
+pyvenv.cfg

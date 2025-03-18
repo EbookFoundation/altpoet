@@ -78,7 +78,7 @@ class Img(models.Model):
     described_by = models.CharField(max_length=80, null=True)
 
     # this is the preferred alt
-    alt = models.ForeignKey("Image", null=True, related_name='imgs', on_delete=models.SET_NULL)
+    alt = models.ForeignKey("Alt", null=True, related_name='imgs', on_delete=models.SET_NULL)
 
     def __str__(self):
         return f'{self.img_id} in {self.document}'
