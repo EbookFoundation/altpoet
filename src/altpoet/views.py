@@ -1,8 +1,11 @@
 from django.contrib.auth.models import User
-from rest_framework import permissions, viewsets
+from django.shortcuts import get_object_or_404
 
-from altpoet.models import Document, Img, Alt
-from altpoet.serializers import DocumentSerializer, ImgSerializer, AltSerializer, UserSerializer
+from rest_framework import generics, permissions, status, viewsets
+from rest_framework.response import Response
+
+from altpoet.models import Alt, Agent, Document, Img 
+from altpoet.serializers import AltSerializer, DocumentSerializer, ImgSerializer, UserSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -28,10 +31,34 @@ class ImgViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
  
     
-class AltViewSet(viewsets.ModelViewSet):
+class AltViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
     """
     API endpoint that allows alt text to be viewed or edited.
     """
     queryset = Alt.objects.all().order_by('-created')
     serializer_class = AltSerializer
     permission_classes = [permissions.IsAuthenticated]
+    
+    '''
+    creates a new alt, and sets it in the specified img
+    '''
+    def create(self, request, *args, **kwargs):
+        try:
+            img = Img.objects.get(id=request.data.get('img', ''))
+        except Img.DoesNotExist:
+            return Response({'detail': 'Img not found'}, status=status.HTTP_400_BAD_REQUEST)
+        text = request.data.get('text', '')
+        source = request.data.get('source', None)
+        if source == None:
+            source, created = Agent.objects.get_or_create(
+                user=request.user,
+                name=request.user.username)
+        else:
+            source, created = Agent.objects.get_or_create(user=None, name=source)
+
+        alt, created = Alt.objects.get_or_create(img=img, text=text, source=source)
+        img.alt = alt
+        img.save()
+        serializer = AltSerializer(alt)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+

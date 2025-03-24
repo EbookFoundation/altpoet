@@ -46,5 +46,5 @@ class Command(BaseCommand):
                 )
             except DataError as de:
                 self.stdout.write(f'Error {de} on line {lineno}')
-                
+
         self.stdout.write(f"finished loading {models.Img.objects.all().count()} alts for {models.Document.objects.all().count()} docs")

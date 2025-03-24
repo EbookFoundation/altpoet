@@ -15,9 +15,10 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 class AltSerializer(serializers.ModelSerializer):
     source = serializers.SlugRelatedField(
         many=False, read_only=True, slug_field='name')
+
     class Meta:
         model = Alt
-        fields = ['id', 'text', 'source', 'created']
+        fields = ['id', 'img', 'text', 'source', 'created']
 
 
 class ImgSerializer(serializers.ModelSerializer):
@@ -25,6 +26,7 @@ class ImgSerializer(serializers.ModelSerializer):
     alt = serializers.PrimaryKeyRelatedField(
         many=False, read_only=False, allow_null=True, queryset=Alt.objects.all())
     alts = AltSerializer(many=True, read_only=True)
+
     class Meta:
         model = Img
         fields = ['id', 'image', 'img_id', 'img_type', 'is_figure', 'alt', 'alts']
@@ -37,4 +39,3 @@ class DocumentSerializer(serializers.ModelSerializer):
         model = Document
         fields = ['project', 'id', 'item', 'base', 'imgs']
         
-
