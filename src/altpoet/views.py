@@ -4,8 +4,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 
-from altpoet.models import Alt, Agent, Document, Img 
-from altpoet.serializers import AltSerializer, DocumentSerializer, ImgSerializer, UserSerializer
+from altpoet.models import Alt, Agent, Document, Img , UserSubmission
+from altpoet.serializers import AltSerializer, DocumentSerializer, ImgSerializer, UserSerializer, UserSubmissionSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -20,6 +20,39 @@ class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all().order_by('item')
     serializer_class = DocumentSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+class UserSubmissionViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows user JSON alt text submissions to be viewed or edited.
+    """
+    queryset = UserSubmission.objects.all()
+    serializer_class = UserSubmissionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    '''
+    creates a new submission and autoassigns source
+    '''
+    def create(self, request, *args, **kwargs):
+        try:
+            document = Document.objects.get(id=request.data.get('document', ''))
+        except Document.DoesNotExist:
+            return Response({'detail': 'Document not found'}, status=status.HTTP_400_BAD_REQUEST)
+        user_json = request.data.get('user_json', None)
+        source = request.data.get('source', None)
+        if source == None:
+            source, created = Agent.objects.get_or_create(
+                user=request.user,
+                name=request.user.username)
+        else:
+            source, created = Agent.objects.get_or_create(user=None, name=source)
+
+        user_sub, created = UserSubmission.objects.get_or_create(user_json=user_json, 
+                                                            document=document, source=source)
+        serializer = UserSubmissionSerializer(user_sub)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    # query func to get json field based on username and document
+    # def query(username, document):
+        # ...
 
 
 class ImgViewSet(viewsets.ModelViewSet):

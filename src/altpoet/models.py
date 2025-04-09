@@ -133,3 +133,26 @@ class Agent(models.Model):
     name = models.CharField(max_length=80, null=True) 
 
     created = models.DateTimeField(auto_now_add=True, db_index=True)
+
+
+class UserSubmission(models.Model):
+    """This model is a user's saved submission of alt texts that they have written and plan
+    to submit later for voting and approval. Always POSTed by real users, not AI.
+    """
+
+    source = models.ForeignKey("Agent", null=False, related_name='user_who_submitted', on_delete=models.CASCADE)
+    
+    document = models.ForeignKey("Document", null=False, related_name='related_document',
+        on_delete=models.CASCADE)
+    
+    user_json = models.JSONField(null=True)
+
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    def __str__(self):
+        return f'user submission for {self.document} by {self.source}'
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['document', 'source'], name="unique_submission"),
+        ]

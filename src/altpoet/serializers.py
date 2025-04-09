@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 
 from rest_framework import serializers
 
-from altpoet.models import Document, Img, Alt, Agent
+from altpoet.models import Document, Img, Alt, Agent, UserSubmission
 
 
 # Serializers define the API representation.
@@ -38,4 +38,12 @@ class DocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Document
         fields = ['project', 'id', 'item', 'base', 'imgs']
+
+class UserSubmissionSerializer(serializers.ModelSerializer):
+    source = serializers.SlugRelatedField(
+        many=False, read_only=True, slug_field='name')
+
+    class Meta:
+        model = UserSubmission
+        fields = ['source', 'document', 'user_json', 'created']
         

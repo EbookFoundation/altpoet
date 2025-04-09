@@ -19,7 +19,7 @@ from django.urls import path, include
 
 from rest_framework import routers, serializers, viewsets
 
-from altpoet.views import AltViewSet, DocumentViewSet, ImgViewSet, UserViewSet
+from altpoet.views import AltViewSet, DocumentViewSet, ImgViewSet, UserViewSet, UserSubmissionViewSet
 
 
 # Routers provide an easy way of automatically determining the URL conf.
@@ -28,6 +28,7 @@ router.register(r'users', UserViewSet)
 router.register(r'alts', AltViewSet)
 router.register(r'documents', DocumentViewSet)
 router.register(r'imgs', ImgViewSet)
+router.register(r'user_submissions', UserSubmissionViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
