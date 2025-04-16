@@ -27,7 +27,7 @@ class Command(BaseCommand):
                     item=altdata["pg_id"],
                 )
                 if created:
-                    doc.base = urljoin(doc.project.url, altdata["url"])
+                    doc.base = urljoin(doc.project.url, pg.basepath.format(item=doc.item))
                     doc.save()    
                 (image, created) = models.Image.objects.get_or_create(
                     url = urljoin(doc.base, altdata["img_url"])
