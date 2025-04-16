@@ -135,6 +135,7 @@ class Agent(models.Model):
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
 
+# email eric / pull request when figuring out how/if to parse json in database
 class UserSubmission(models.Model):
     """This model is a user's saved submission of alt texts that they have written and plan
     to submit later for voting and approval. Always POSTed by real users, not AI.

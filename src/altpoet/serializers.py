@@ -42,8 +42,10 @@ class DocumentSerializer(serializers.ModelSerializer):
 class UserSubmissionSerializer(serializers.ModelSerializer):
     source = serializers.SlugRelatedField(
         many=False, read_only=True, slug_field='name')
+    
+    # TODO: change document to slug field based on book num
 
     class Meta:
         model = UserSubmission
-        fields = ['source', 'document', 'user_json', 'created']
+        fields = ['id', 'source', 'document', 'user_json', 'created']
         

@@ -50,9 +50,53 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
                                                             document=document, source=source)
         serializer = UserSubmissionSerializer(user_sub)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    # query func to get json field based on username and document
-    # def query(username, document):
-        # ...
+    def get_queryset(self):
+        """
+        Optionally restricts the returned user submissions to a given user and document,
+        by filtering against `username` and `document` query params in the URL.
+        """
+        queryset = UserSubmission.objects.all()
+        username = self.request.query_params.get('username')
+        document = self.request.query_params.get('document')
+        if username is not None:
+            try:
+                source = Agent.objects.get(name=username)
+            except Agent.DoesNotExist:
+                return queryset.none()
+            queryset = queryset.filter(source=source)
+        if document is not None:
+            try:
+                document_obj = Document.objects.get(id=document)
+            except Document.DoesNotExist:
+                return queryset.none()
+            queryset = queryset.filter(document=document_obj)
+        return queryset
+    def list(self, request, *args, **kwargs):
+        # Check if both query parameters are present
+        username = request.query_params.get('username')
+        document = request.query_params.get('document')
+        
+        if username and document:
+            # Use the existing get_queryset() logic to filter
+            queryset = self.filter_queryset(self.get_queryset())
+            
+            if queryset.exists():
+                # Get the single object
+                instance = queryset.get()
+                serializer = self.get_serializer(instance)
+                return Response(serializer.data)
+            else:
+                return Response(
+                    status=status.HTTP_204_NO_CONTENT
+                )
+        
+        # For other cases (single param or no params), use default list behavior
+        return super().list(request, *args, **kwargs)
+
+        
+
+
+
 
 
 class ImgViewSet(viewsets.ModelViewSet):
