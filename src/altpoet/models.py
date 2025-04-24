@@ -88,7 +88,6 @@ class Img(models.Model):
             models.UniqueConstraint(fields=['document', 'img_id'], name="img_unique_in_doc"),
         ]
 
-
 class Image(models.Model):
     """ This deals with image file, to allow multiple references to the same image.
     The hash allows us to identify duplicate images used across documents - I've seen hundreds of
@@ -96,14 +95,25 @@ class Image(models.Model):
     buttons or decorative images.
     """
     # always absolute
-    url = models.CharField(max_length=1024)
+    url = models.CharField(max_length=1024, unique=True)
+    
+    # image dimensions (pixels)
+    x = models.IntegerField(null=True)
+    y = models.IntegerField(null=True)
+    
+    # filesize
+    filesize = models.IntegerField(null=True)
     
     # hash of the image
-    hash = models.CharField(max_length=32)
+    hash = models.CharField(max_length=64, null=True)
         
     def __str__(self):
         return self.url
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["hash"]),
+        ]
 
 class Alt(models.Model):
     """This model represents alt text entries and proposed alt text entries
