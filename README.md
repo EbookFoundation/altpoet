@@ -51,11 +51,15 @@ now, make yourself a superuser
 
 load the sample data
 `django-admin load_pgimgdata data/sample_alt_data.csv `
-
+or get a load of PG images data from https://www.gutenberg.org/cache/epub/feeds/img_data.csv.gz
+then load it with 
+`django-admin load_images [path to unzipped data file] `
 start the server
 `django-admin rundata`
 
 look at
 `http://127.0.0.1:8000/admin/`
-`http://127.0.0.1:8000/api/documents/`
+`http://127.0.0.1:8000/api/documents/
+
+`
 
