@@ -33,7 +33,7 @@ class ImgAdmin(admin.ModelAdmin):
 class ImageAdmin(admin.ModelAdmin):
     list_display = ['url', 'url_display']
     search_fields = ['url']
-    readonly_fields = ['hash', 'images', 'url']
+    readonly_fields = ['url', 'x', 'y', 'filesize', 'url_display', 'hash']
     
     @admin.display(description="Image")
     def url_display(self, obj):
