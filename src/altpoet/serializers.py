@@ -2,7 +2,8 @@ from django.contrib.auth.models import User
 
 from rest_framework import serializers
 
-from altpoet.models import Document, Img, Alt, Agent, UserSubmission
+
+from altpoet.models import Document, Img, Image, Alt, Agent, UserSubmission
 
 
 # Serializers define the API representation.
@@ -10,6 +11,13 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
         fields = ['url', 'username', 'email', 'is_staff']
+
+
+class ImageSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Image
+        fields = ['url', 'x', 'y', 'filesize']
 
 
 class AltSerializer(serializers.ModelSerializer):
@@ -22,7 +30,7 @@ class AltSerializer(serializers.ModelSerializer):
 
 
 class ImgSerializer(serializers.ModelSerializer):
-    image = serializers.SlugRelatedField(many=False, read_only=True, slug_field='url')
+    image = ImageSerializer(many=False, read_only=True)
     alt = serializers.PrimaryKeyRelatedField(
         many=False, read_only=False, allow_null=True, queryset=Alt.objects.all())
     alts = AltSerializer(many=True, read_only=True)

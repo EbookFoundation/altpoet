@@ -1,0 +1,93 @@
+Directions at
+https://www.digitalocean.com/community/tutorials/how-to-configure-nginx-as-a-reverse-proxy-on-ubuntu-22-04
+(but stating with ubuntu-24)
+
+using DO firewall
+add ports 8022 and 8443 for proxying
+server: altpoet.ebookfoundation.org
+
+server {
+
+    server_name altpoet.ebookfoundation.org ;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location /static/ {
+        root /home/ubuntu/altpoet ;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/run/gunicorn.sock;
+    }
+
+    listen 443 ssl; # managed by Certbot
+    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/altpoet.ebookfoundation.org/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/altpoet.ebookfoundation.org/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+server {
+
+    server_name altpoet.ebookfoundation.org ;
+
+    location / {
+        proxy_pass https://dev.gutenberg.org ;
+    }
+
+    listen 8443 ssl; # managed by Certbot
+    listen [::]:8443 ssl ipv6only=on; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/altpoet.ebookfoundation.org/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/altpoet.ebookfoundation.org/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+server {
+    if ($host = altpoet.ebookfoundation.org) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    listen 80;
+    listen [::]:80;
+
+    server_name altpoet.ebookfoundation.org ;
+    return 404; # managed by Certbot
+
+
+}
+
+
+
+https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-22-04
+sudo apt install -y python3-pip
+sudo apt install python3-venv python3-dev libpq-dev postgresql postgresql-contrib
+sudo apt install pipx
+pipx install pipenv
+pipx ensurepath
+exit
+
+
+[login again]
+git clone https://github.com/EbookFoundation/altpoet.git
+
+https://www.digitalocean.com/community/tutorials/how-to-set-up-django-with-postgres-nginx-and-gunicorn-on-ubuntu
+
+[Unit]
+Description=gunicorn daemon
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/altpoet
+ExecStart=/home/ubuntu/.local/bin/pipenv run gunicorn \
+          --access-logfile - \
+          --workers 3 \
+          --bind unix:/run/gunicorn.sock \
+          altpoet.wsgi:application
+
+Change owner of static directory (/home/ubuntu/altpoet/static/) is set to www-data and parent directories are 755
