@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('altpoet', '0011_merge_20250428_2125'),
+        ('altpoet', '0012_merge_20250429_2038'),
     ]
 
     operations = [

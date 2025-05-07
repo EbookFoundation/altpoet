@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('altpoet', '0012_usersubmission_submission_type'),
+        ('altpoet', '0013_usersubmission_submission_type'),
     ]
 
     operations = [
