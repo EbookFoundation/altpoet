@@ -117,6 +117,8 @@ class Image(models.Model):
             models.Index(fields=["hash"]),
         ]
 
+# add unique constraint to tuple (user, image, document)
+# one submission per image in document
 class Alt(models.Model):
     """This model represents alt text entries and proposed alt text entries
     """
@@ -133,8 +135,14 @@ class Alt(models.Model):
                                  related_name='alts_created', on_delete=models.SET_NULL)
     
     created = models.DateTimeField(auto_now_add=True, db_index=True)
+
     def __str__(self):
         return f'alt for {self.img} in {self.img.document}'
+    
+    class Meta: 
+        constraints = [
+            models.UniqueConstraint(fields=['img', 'source'], name="alt_unique_per_user"),
+            ]
 
 
 class Agent(models.Model):

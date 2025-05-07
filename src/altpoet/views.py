@@ -46,7 +46,10 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
                     name=username)
             else:
                 source, created = Agent.objects.get_or_create(user=None, name=source)
-            alt, created = Alt.objects.get_or_create(img=img, text=value, source=source)
+            alt, created = Alt.objects.update_or_create(img=img, source=source, 
+                                                        defaults={
+                                                            "text": value
+                                                        })
             img.alt = alt
             img.save()
             source = source_req
@@ -55,7 +58,7 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
         for key, value in user_json.items():
             img = Img.objects.filter(document=document, img_id=key).get()
             source = Agent.objects.filter(user=user, name=username).get()
-            alt = Alt.objects.filter(img=img, text=value, source=source).get()
+            alt = Alt.objects.filter(img=img, source=source).get()
             alt.user_sub = user_sub
             alt.save()
                                 
@@ -178,8 +181,11 @@ class AltViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
         else:
             source, created = Agent.objects.get_or_create(user=None, name=source)
 
-        alt, created = Alt.objects.get_or_create(img=img, text=text, 
-                                                 source=source, user_sub=user_sub)
+        alt, created = Alt.objects.update_or_create(img=img, source=source, 
+                                                    defaults={
+                                                        "text": text,
+                                                        "user_sub": user_sub
+                                                    })
         img.alt = alt
         img.save()
         serializer = AltSerializer(alt)
