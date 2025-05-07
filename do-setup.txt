@@ -12,7 +12,7 @@ server {
 
     location = /favicon.ico { access_log off; log_not_found off; }
     location /static/ {
-        root /home/ubuntu/altpoet;
+        root /home/ubuntu/altpoet ;
     }
 
     location / {
@@ -44,7 +44,6 @@ server {
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
 }
-
 server {
     if ($host = altpoet.ebookfoundation.org) {
         return 301 https://$host$request_uri;
@@ -59,6 +58,8 @@ server {
 
 
 }
+
+
 
 https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-22-04
 sudo apt install -y python3-pip
@@ -89,3 +90,4 @@ ExecStart=/home/ubuntu/.local/bin/pipenv run gunicorn \
           --bind unix:/run/gunicorn.sock \
           altpoet.wsgi:application
 
+Change owner of static directory (/home/ubuntu/altpoet/static/) is set to www-data and parent directories are 755
