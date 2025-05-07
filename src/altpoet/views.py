@@ -1,11 +1,15 @@
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
-from rest_framework import generics, permissions, status, viewsets
+from rest_framework import generics, permissions, status, viewsets, exceptions
 from rest_framework.response import Response
 
 from altpoet.models import Alt, Agent, Document, Img , UserSubmission
 from altpoet.serializers import AltSerializer, DocumentSerializer, ImgSerializer, UserSerializer, UserSubmissionSerializer
+
+from django.db import transaction
+from rest_framework.test import APIRequestFactory
+
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -32,6 +36,30 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
     '''
     creates a new submission and autoassigns source
     '''
+    def update_img_alt_texts(self, user_json, document, source, user, username):
+        source_req = source
+        for key, value in user_json.items():
+            img = Img.objects.filter(document=document, img_id=key).get()
+            if source == None:
+                source, created = Agent.objects.get_or_create(
+                    user=user,
+                    name=username)
+            else:
+                source, created = Agent.objects.get_or_create(user=None, name=source)
+            alt, created = Alt.objects.get_or_create(img=img, text=value, source=source)
+            img.alt = alt
+            img.save()
+            source = source_req
+    
+    def add_user_sub_fk(self, user_sub, user_json, document, user, username):
+        for key, value in user_json.items():
+            img = Img.objects.filter(document=document, img_id=key).get()
+            source = Agent.objects.filter(user=user, name=username).get()
+            alt = Alt.objects.filter(img=img, text=value, source=source).get()
+            alt.user_sub = user_sub
+            alt.save()
+                                
+    # new alts_created [] in model, if "SB" then create alts and add them to obj, otherwise empty
     def create(self, request, *args, **kwargs):
         try:
             document = Document.objects.get(id=request.data.get('document', ''))
@@ -39,15 +67,37 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Document not found'}, status=status.HTTP_400_BAD_REQUEST)
         user_json = request.data.get('user_json', None)
         source = request.data.get('source', None)
-        if source == None:
-            source, created = Agent.objects.get_or_create(
-                user=request.user,
-                name=request.user.username)
-        else:
-            source, created = Agent.objects.get_or_create(user=None, name=source)
+        submission_type = request.data.get('submission_type', None)
+        # if "SB" then add alts_created [] to updateorcreate "defaults" obj, otherwise empty 
+        try:
+            with transaction.atomic():
+                if(submission_type == UserSubmission.SubmissionType.SUBMIT):
+                    self.update_img_alt_texts(user_json, document, source, 
+                            request.user, request.user.username)
+                if source == None:
+                    source, created = Agent.objects.get_or_create(
+                        user=request.user,
+                        name=request.user.username)
+                else:
+                    source, created = Agent.objects.get_or_create(user=None, name=source)
 
-        user_sub, created = UserSubmission.objects.get_or_create(user_json=user_json, 
-                                                            document=document, source=source)
+                user_sub, created = UserSubmission.objects.update_or_create(
+                    document=document, 
+                    source=source, 
+                    defaults={
+                        'user_json': user_json, 
+                        "submission_type": submission_type
+                    })
+                if(submission_type == UserSubmission.SubmissionType.SUBMIT):
+                    self.add_user_sub_fk(user_sub, user_json, document, 
+                                         request.user, request.user.username)
+        except Img.DoesNotExist:
+            return Response({'detail': 'Img not found' }, status=status.HTTP_400_BAD_REQUEST)
+        except Agent.DoesNotExist:
+            return Response({'detail': 'User not found: ' + request.user.username}, status=status.HTTP_400_BAD_REQUEST)
+        except Alt.DoesNotExist:
+            return Response({'detail': 'Alt not found'}, status=status.HTTP_400_BAD_REQUEST)        
+        
         serializer = UserSubmissionSerializer(user_sub)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     def get_queryset(self):
@@ -93,11 +143,6 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
         # For other cases (single param or no params), use default list behavior
         return super().list(request, *args, **kwargs)
 
-        
-
-
-
-
 
 class ImgViewSet(viewsets.ModelViewSet):
     """
@@ -115,17 +160,17 @@ class AltViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
     queryset = Alt.objects.all().order_by('-created')
     serializer_class = AltSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
-    '''
-    creates a new alt, and sets it in the specified img
-    '''
     def create(self, request, *args, **kwargs):
+        '''
+        creates a new alt, and sets it in the specified img
+        '''
         try:
             img = Img.objects.get(id=request.data.get('img', ''))
         except Img.DoesNotExist:
             return Response({'detail': 'Img not found'}, status=status.HTTP_400_BAD_REQUEST)
         text = request.data.get('text', '')
         source = request.data.get('source', None)
+        user_sub = request.data.get('user_sub', None)
         if source == None:
             source, created = Agent.objects.get_or_create(
                 user=request.user,
@@ -133,9 +178,30 @@ class AltViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
         else:
             source, created = Agent.objects.get_or_create(user=None, name=source)
 
-        alt, created = Alt.objects.get_or_create(img=img, text=text, source=source)
+        alt, created = Alt.objects.get_or_create(img=img, text=text, 
+                                                 source=source, user_sub=user_sub)
         img.alt = alt
         img.save()
         serializer = AltSerializer(alt)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def update(self, request, *args, **kwargs):
+        '''
+        add user auth check to patch request
+        '''
+        text_source = self.get_object().source
+        if(text_source == None):
+            return Response({'detail': "Alt Text Source Doesn't Exist"}, status=status.HTTP_400_BAD_REQUEST)
+        try: 
+            user = Agent.objects.get(user=request.user, name=request.user.username)
+        except Agent.DoesNotExist:
+            return Response({'detail': "User Doesn't Exist"}, status=status.HTTP_400_BAD_REQUEST)
+        if(user != text_source):
+            return Response({'detail': "User Doesn't Have Permission To Edit"}, status=status.HTTP_400_BAD_REQUEST)
+        # if ok to edit, use regular patch
+        return super().update(request, *args, **kwargs)
+
+        
+        
+
+
 
