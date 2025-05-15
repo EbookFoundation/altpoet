@@ -116,3 +116,7 @@ local_settings.py
 
 bin
 pyvenv.cfg
+
+#local files
+
+.DS_Store
