@@ -1,10 +1,12 @@
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 
+from rest_framework.decorators import action
+
 from rest_framework import generics, permissions, status, viewsets, exceptions
 from rest_framework.response import Response
 
-from altpoet.models import Alt, Agent, Document, Img , UserSubmission
+from altpoet.models import Project, Alt, Agent, Document, Img , UserSubmission
 from altpoet.serializers import AltSerializer, DocumentSerializer, ImgSerializer, UserSerializer, UserSubmissionSerializer
 
 from django.db import transaction
@@ -24,6 +26,26 @@ class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.all().order_by('item')
     serializer_class = DocumentSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+    @action(detail=False, methods=["GET"], url_path='get-project-item', 
+            url_name='get-project-item')
+    def get_project_item(self, request, *args, **kwargs):
+        project = self.request.query_params.get('project')
+        item = self.request.query_params.get('item')
+        if project is not None:
+            try: 
+                project = Project.objects.get(name=project)
+            except:
+                return Response({'detail': "Project Not Found"}, status=status.HTTP_400_BAD_REQUEST)
+        if item is None:
+            return Response({'detail': "Item Not Found"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            document = Document.objects.get(project=project, item=item)
+        except Document.DoesNotExist:
+            return Response({'detail': "Document Doesn't Exist"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = DocumentSerializer(document)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class UserSubmissionViewSet(viewsets.ModelViewSet):
     """
@@ -137,7 +159,7 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
                 # Get the single object
                 instance = queryset.get()
                 serializer = self.get_serializer(instance)
-                return Response(serializer.data)
+                return Response(serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response(
                     status=status.HTTP_204_NO_CONTENT
