@@ -33,13 +33,14 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def get_project_item(self, request, *args, **kwargs):
         project = self.request.query_params.get('project')
         item = self.request.query_params.get('item')
-        if project is not None:
-            try: 
-                project = Project.objects.get(name=project)
-            except:
-                return Response({'detail': "Project Not Found"}, status=status.HTTP_400_BAD_REQUEST)
+        if project is None:
+            return Response({'detail': "Project Not Found"}, status=status.HTTP_400_BAD_REQUEST)
+        try: 
+            project = Project.objects.get(name=project)
+        except:
+            return Response({'detail': "Project Not Found"}, status=status.HTTP_400_BAD_REQUEST)
         if item is None:
-            return Response({'detail': "Item Not Found"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'detail': "Item Not Found"}, status=status.HTTP_400_BAD_REQUEST)
         try:
             document = Document.objects.get(project=project, item=item)
         except Document.DoesNotExist:
