@@ -18,6 +18,16 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    @action(detail=False, methods=["GET"], url_path='get-username', 
+            url_name='get-username')
+    def get_username(self, request, *args, **kwargs):
+        username = request.user.username
+        try:
+            User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response({'detail': "User " + username + "Doesn't Exist"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"username": username}, status=status.HTTP_200_OK)
+
 
 class DocumentViewSet(viewsets.ModelViewSet):
     """
@@ -31,8 +41,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["GET"], url_path='get-project-item', 
             url_name='get-project-item')
     def get_project_item(self, request, *args, **kwargs):
-        project = self.request.query_params.get('project')
-        item = self.request.query_params.get('item')
+        project = request.query_params.get('project')
+        item = request.query_params.get('item')
         if project is None:
             return Response({'detail': "Project Not Found"}, status=status.HTTP_400_BAD_REQUEST)
         try: 
@@ -133,26 +143,27 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
         """
         queryset = UserSubmission.objects.all()
         username = self.request.query_params.get('username')
-        document = self.request.query_params.get('document')
+        item = self.request.query_params.get('item')
+        project = Project.objects.get(name='Project Gutenberg')
         if username is not None:
             try:
                 source = Agent.objects.get(name=username)
             except Agent.DoesNotExist:
                 return queryset.none()
             queryset = queryset.filter(source=source)
-        if document is not None:
+        if item is not None:
             try:
-                document_obj = Document.objects.get(id=document)
+                document = Document.objects.get(project=project, item=item)
             except Document.DoesNotExist:
                 return queryset.none()
-            queryset = queryset.filter(document=document_obj)
+            queryset = queryset.filter(document=document)
         return queryset
     def list(self, request, *args, **kwargs):
         # Check if both query parameters are present
         username = request.query_params.get('username')
-        document = request.query_params.get('document')
+        item = request.query_params.get('item')
         
-        if username and document:
+        if username and item:
             # Use the existing get_queryset() logic to filter
             queryset = self.filter_queryset(self.get_queryset())
             
