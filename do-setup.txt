@@ -91,3 +91,9 @@ ExecStart=/home/ubuntu/.local/bin/pipenv run gunicorn \
           altpoet.wsgi:application
 
 Change owner of static directory (/home/ubuntu/altpoet/static/) is set to www-data and parent directories are 755
+
+
+RESTART
+
+sudo systemctl restart gunicorn
+sudo systemctl restart nginx
