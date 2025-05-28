@@ -13,7 +13,8 @@ class DocumentAdmin(admin.ModelAdmin):
     list_display = ('project_name', 'item', 'created')
     date_hierarchy = 'created'
     ordering = ['item']
-    readonly_fields = ('project', 'created')
+    readonly_fields = ('project', 'created', 'item')
+    search_fields = ['item__exact']
 
     @admin.display(description="Project Name")
     def project_name(self, obj):
