@@ -67,7 +67,7 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
         try:
             document = Document.objects.get(id=request.data.get('document', ''))
         except Document.DoesNotExist:
-            return Response({'detail': 'Document not found'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'Document not found'}, status=status.HTTP_404_NOT_FOUND)
         user_json = request.data.get('user_json', None)
         source = request.data.get('source', None)
         submission_type = request.data.get('submission_type', None)
@@ -95,11 +95,11 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
                     self.add_user_sub_fk(user_sub, user_json, document, 
                                          request.user, request.user.username)
         except Img.DoesNotExist:
-            return Response({'detail': 'Img not found' }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'Img not found' }, status=status.HTTP_404_NOT_FOUND)
         except Agent.DoesNotExist:
-            return Response({'detail': 'User not found: ' + request.user.username}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'User not found: ' + request.user.username}, status=status.HTTP_404_NOT_FOUND)
         except Alt.DoesNotExist:
-            return Response({'detail': 'Alt not found'}, status=status.HTTP_400_BAD_REQUEST)        
+            return Response({'detail': 'Alt not found'}, status=status.HTTP_404_NOT_FOUND)        
         
         serializer = UserSubmissionSerializer(user_sub)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -170,7 +170,7 @@ class AltViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
         try:
             img = Img.objects.get(id=request.data.get('img', ''))
         except Img.DoesNotExist:
-            return Response({'detail': 'Img not found'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'Img not found'}, status=status.HTTP_404_NOT_FOUND)
         text = request.data.get('text', '')
         source = request.data.get('source', None)
         user_sub = request.data.get('user_sub', None)
@@ -196,13 +196,13 @@ class AltViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
         '''
         text_source = self.get_object().source
         if(text_source == None):
-            return Response({'detail': "Alt Text Source Doesn't Exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': "Alt Text Source Doesn't Exist"}, status=status.HTTP_404_NOT_FOUND)
         try: 
             user = Agent.objects.get(user=request.user, name=request.user.username)
         except Agent.DoesNotExist:
-            return Response({'detail': "User Doesn't Exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': "User Doesn't Exist"}, status=status.HTTP_404_NOT_FOUND)
         if(user != text_source):
-            return Response({'detail': "User Doesn't Have Permission To Edit"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': "User Doesn't Have Permission To Edit"}, status=status.HTTP_404_NOT_FOUND)
         # if ok to edit, use regular patch
         return super().update(request, *args, **kwargs)
 
