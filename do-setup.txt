@@ -7,9 +7,8 @@ add ports 8022 and 8443 for proxying
 server: altpoet.ebookfoundation.org
 
 server {
-
     server_name altpoet.ebookfoundation.org ;
-
+        
     location = /favicon.ico { access_log off; log_not_found off; }
     location /static/ {
         root /home/ubuntu/altpoet ;
@@ -20,6 +19,13 @@ server {
         proxy_pass http://unix:/run/gunicorn.sock;
     }
 
+    location /alttext {   
+        alias /home/ubuntu/alt-text-editor/alt-text-react-app/dist;
+        index index.html
+        try_files $uri $uri/ =404;
+    }
+    
+
     listen 443 ssl; # managed by Certbot
     listen [::]:443 ssl ipv6only=on; # managed by Certbot
     ssl_certificate /etc/letsencrypt/live/altpoet.ebookfoundation.org/fullchain.pem; # managed by Certbot
@@ -28,12 +34,17 @@ server {
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
 }
+
+
 server {
 
     server_name altpoet.ebookfoundation.org ;
 
     location / {
         proxy_pass https://dev.gutenberg.org ;
+        # Intercept and rewrite 302/301 Location headers from the upstream
+        proxy_redirect http://dev.gutenberg.org https://altpoet.ebookfoundation.org:8443;
+        proxy_redirect https://dev.gutenberg.org https://altpoet.ebookfoundation.org:8443;
     }
 
     listen 8443 ssl; # managed by Certbot
@@ -58,7 +69,6 @@ server {
 
 
 }
-
 
 
 https://www.digitalocean.com/community/tutorials/how-to-secure-nginx-with-let-s-encrypt-on-ubuntu-22-04
