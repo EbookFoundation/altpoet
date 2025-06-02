@@ -98,7 +98,11 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
     # new alts_created [] in model, if "SB" then create alts and add them to obj, otherwise empty
     def create(self, request, *args, **kwargs):
         try:
-            document = Document.objects.get(id=request.data.get('document', ''))
+            project = Project.objects.get(name='Project Gutenberg')
+        except Project.DoesNotExist:
+            return Response({'detail': 'Project Gutenberg Was Not Set'}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            document = Document.objects.get(item=request.data.get('item', ''), project=project)
         except Document.DoesNotExist:
             return Response({'detail': 'Document not found'}, status=status.HTTP_404_NOT_FOUND)
         user_json = request.data.get('user_json', None)
@@ -139,7 +143,7 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         Optionally restricts the returned user submissions to a given user and document,
-        by filtering against `username` and `document` query params in the URL.
+        by filtering against `username` and `items` query params in the URL.
         """
         queryset = UserSubmission.objects.all()
         username = self.request.query_params.get('username')
