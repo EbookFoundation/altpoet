@@ -164,23 +164,11 @@ class UserSubmission(models.Model):
     to submit later for voting and approval. Always POSTed by real users, not AI.
     """
 
-    class SubmissionType(models.TextChoices):
-        SAVE = 'SV', _('Save')
-        SUBMIT = 'SB', _('Submit')
-
     source = models.ForeignKey("Agent", null=False, related_name='user_who_submitted', on_delete=models.CASCADE)
     
     document = models.ForeignKey("Document", null=False, related_name='related_document',
         on_delete=models.CASCADE)
     
-    user_json = models.JSONField(null=True)
-
-    submission_type = models.CharField(
-        max_length=2,
-        choices=SubmissionType.choices,
-        default=SubmissionType.SAVE,
-    )
-
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
     def __str__(self):

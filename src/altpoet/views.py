@@ -66,36 +66,18 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
     serializer_class = UserSubmissionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    '''
-    creates a new submission and autoassigns source
-    '''
-    def update_img_alt_texts(self, user_json, document, source, user, username):
-        source_req = source
+    # alts_created [] in model
+    def update_img_alt_texts(self, user_json, document, source, user_sub, user, username):
         for key, value in user_json.items():
             img = Img.objects.filter(document=document, img_id=key).get()
-            if source == None:
-                source, created = Agent.objects.get_or_create(
-                    user=user,
-                    name=username)
-            else:
-                source, created = Agent.objects.get_or_create(user=None, name=source)
             alt, created = Alt.objects.update_or_create(img=img, source=source, 
                                                         defaults={
-                                                            "text": value
+                                                            "text": value,
+                                                            "user_sub": user_sub
                                                         })
             img.alt = alt
             img.save()
-            source = source_req
-    
-    def add_user_sub_fk(self, user_sub, user_json, document, user, username):
-        for key, value in user_json.items():
-            img = Img.objects.filter(document=document, img_id=key).get()
-            source = Agent.objects.filter(user=user, name=username).get()
-            alt = Alt.objects.filter(img=img, source=source).get()
-            alt.user_sub = user_sub
-            alt.save()
                                 
-    # new alts_created [] in model, if "SB" then create alts and add them to obj, otherwise empty
     def create(self, request, *args, **kwargs):
         try:
             project = Project.objects.get(name='Project Gutenberg')
@@ -105,32 +87,23 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
             document = Document.objects.get(item=request.data.get('item', ''), project=project)
         except Document.DoesNotExist:
             return Response({'detail': 'Document not found'}, status=status.HTTP_404_NOT_FOUND)
-        user_json = request.data.get('user_json', None)
+        user_alt_text_json = request.data.get('user_alt_text_json', None)
+        if user_alt_text_json is None:
+            return Response({'detail': '"user_alt_text_json" not found in request'}, status=status.HTTP_400_BAD_REQUEST)
         source = request.data.get('source', None)
-        submission_type = request.data.get('submission_type', None)
-        # if "SB" then add alts_created [] to updateorcreate "defaults" obj, otherwise empty 
+        if source == None:
+            source, created = Agent.objects.get_or_create(
+                user=request.user,
+                name=request.user.username)
+        else:
+            source, created = Agent.objects.get_or_create(user=None, name=source)
         try:
             with transaction.atomic():
-                if(submission_type == UserSubmission.SubmissionType.SUBMIT):
-                    self.update_img_alt_texts(user_json, document, source, 
-                            request.user, request.user.username)
-                if source == None:
-                    source, created = Agent.objects.get_or_create(
-                        user=request.user,
-                        name=request.user.username)
-                else:
-                    source, created = Agent.objects.get_or_create(user=None, name=source)
-
-                user_sub, created = UserSubmission.objects.update_or_create(
+                user_sub, created = UserSubmission.objects.get_or_create(
                     document=document, 
-                    source=source, 
-                    defaults={
-                        'user_json': user_json, 
-                        "submission_type": submission_type
-                    })
-                if(submission_type == UserSubmission.SubmissionType.SUBMIT):
-                    self.add_user_sub_fk(user_sub, user_json, document, 
-                                         request.user, request.user.username)
+                    source=source)
+                self.update_img_alt_texts(user_alt_text_json, document, source, user_sub,
+                        request.user, request.user.username)
         except Img.DoesNotExist:
             return Response({'detail': 'Img not found' }, status=status.HTTP_404_NOT_FOUND)
         except Agent.DoesNotExist:
@@ -138,6 +111,7 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
         except Alt.DoesNotExist:
             return Response({'detail': 'Alt not found'}, status=status.HTTP_404_NOT_FOUND)        
         
+
         serializer = UserSubmissionSerializer(user_sub)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     def get_queryset(self):
