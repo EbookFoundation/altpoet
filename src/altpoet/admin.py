@@ -49,7 +49,8 @@ class AltAdmin(admin.ModelAdmin):
 
 @admin.register(models.UserSubmission)
 class UserSubAdmin(admin.ModelAdmin):
-    list_display = ('source', 'document')
+    list_display = ('source', 'document', 'user_json')
+    readonly_fields = ['user_json']
     search_fields = ['source', 'document']
 
 
