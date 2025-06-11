@@ -23,6 +23,9 @@ class ImageSerializer(serializers.ModelSerializer):
 class AltSerializer(serializers.ModelSerializer):
     source = serializers.SlugRelatedField(
         many=False, read_only=True, slug_field='name')
+    
+    img = serializers.SlugRelatedField(
+        many=False, read_only=True, slug_field='img_id')
 
     class Meta:
         model = Alt
@@ -53,9 +56,9 @@ class UserSubmissionSerializer(serializers.ModelSerializer):
     
     alts_created = AltSerializer(many=True, read_only=True)
     
-    # TODO: change document to slug field based on book num
+    document = serializers.SlugRelatedField(many=False, read_only=True, slug_field='item')
 
     class Meta:
         model = UserSubmission
-        fields = ['id', 'source', 'document', 'submission_type', 'alts_created', 'user_json', 'created']
+        fields = ['id', 'source', 'document', 'alts_created', 'created']
         
