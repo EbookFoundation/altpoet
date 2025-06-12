@@ -120,3 +120,6 @@ pyvenv.cfg
 #local files
 
 .DS_Store
+
+# Jupyter
+*.ipynb
