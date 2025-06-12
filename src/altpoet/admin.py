@@ -10,7 +10,7 @@ admin.site.register(models.Project)
 
 @admin.register(models.Document)
 class DocumentAdmin(admin.ModelAdmin):
-    list_display = ('project_name', 'item', 'created')
+    list_display = ('project_name', 'item', 'created', 'lang')
     date_hierarchy = 'created'
     ordering = ['item']
     readonly_fields = ('project', 'created', 'item')
