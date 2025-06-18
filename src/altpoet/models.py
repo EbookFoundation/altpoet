@@ -40,6 +40,8 @@ class Document(models.Model):
     
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     
+    lang = models.CharField(max_length=10, default="en")
+
     @property
     def url(self):
         if self.project:
