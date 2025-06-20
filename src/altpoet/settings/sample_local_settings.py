@@ -43,3 +43,6 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'PORT': '5432',    }
 }
+
+
+ANTHROPIC_API_KEY = 'aojfeahefueggfueqfuh[qghq0hqfaovhreqoihg'

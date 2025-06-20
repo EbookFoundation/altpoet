@@ -5,6 +5,7 @@ from django.db import models
 
 from django.utils.translation import gettext_lazy as _
 
+from altpoet.ai import ai_alts
 
 class Project(models.Model):
     ''' for example, Project Gutenberg. The Project object holds constants that otherwise would
@@ -48,6 +49,8 @@ class Document(models.Model):
             return urljoin(self.project.url, self.project.basepath % {'item':self.item})
         return self.base
     
+    def add_ai_alts(self):
+        return ai_alts(self)
 
     def __str__(self):
         return f'{self.item} in {self.project}'

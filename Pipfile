@@ -11,6 +11,7 @@ django-filter = "*"
 psycopg2 = "*"
 django-cors-headers = "*"
 gunicorn = "*"
+anthropic = "*"
 
 [dev-packages]
 jupyter = "*"
