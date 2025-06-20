@@ -225,7 +225,7 @@ class AltViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
         if(text_source == None):
             return Response({'detail': "Alt Text Source Doesn't Exist"}, status=status.HTTP_404_NOT_FOUND)
         try: 
-            user = Agent.objects.get(user=request.user, name=request.user.username)
+            user = Agent.objects.get(user=request.user)
         except Agent.DoesNotExist:
             return Response({'detail': "User Doesn't Exist"}, status=status.HTTP_404_NOT_FOUND)
         if(user != text_source):
