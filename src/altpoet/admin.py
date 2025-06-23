@@ -33,7 +33,7 @@ class DocumentAdmin(admin.ModelAdmin):
 
     @admin.display(description="img count")
     def img_count(self, obj):
-        return str(len(list(obj.imgs.all())))
+        return str(obj.imgs.count())
 
 
 @admin.register(models.Img)

@@ -1,0 +1,119 @@
+{% load static %}
+<html>
+<head>
+<title>Free Ebook Foundation's AltPoet</title>
+{% include "basestyle.html" %}
+</head>
+<body>
+{% include "header.html" %}
+<main class="section alt-topic">
+		<div class="container">
+		<div class="content">
+<h1>
+Welcome to AltPoet!
+</h1>
+<p style='box-sizing: content-box'>
+This website enables the editing and creation of alt-text descriptions to make Project Gutenberg ebooks accesible to the blind and vision-impaired. 
+</p>
+{% block content %}
+{% if form.errors and not form.non_field_errors %}
+<p class="errornote">
+Please correct the error below. Please correct the errors below.
+</p>
+{% endif %}
+
+{% if form.non_field_errors %}
+{% for error in form.non_field_errors %}
+<p class="errornote">
+    {{ error }}
+</p>
+{% endfor %}
+{% endif %}
+
+<div id="content-main">
+
+{% if user.is_authenticated %}
+<p class="errornote">
+    You are authenticated as {{ user.username }}. 
+</p>
+<div>
+To start work, enter a Project Gutenberg book number: <form action="{% url 'edit_book' %}" method="get" id="choose-book"><input type="text" name="item"></form>
+</div>
+<p>Or ... log out <a href="{% url 'logout' %}">here</a>.</p>
+{% else %}
+<p>If you would like to become an "Alt Poet" and help us in this endeavor, please email volunteer@ebookfoundation.org, and we'll set you up with a log-in.</p>
+
+<p>Or ... log in <a href="{% url 'login' %}">here</a>.</p>
+</div>
+{% endif %}
+
+<h2>Project status.</h2>
+<ul>
+<li> There are {{ num_docs }} books available for alt text editing and creation.</li>
+<li> There are {{num_imgs}} image elements that may need alt text.</li>
+<li> Alt Poets have created {{ done_alts }} alt text descriptions!</li>
+</ul>
+<h2>Suggested books to work on</h2>
+Most downloaded:
+<ul>
+<li><a href="{% url 'edit_book' %}?item=1513">Romeo and Juliet by William Shakespeare (63340)</a></li>
+<li><a href="{% url 'edit_book' %}?item=1342">Pride and Prejudice by Jane Austen (55559)</a></li>
+<li><a href="{% url 'edit_book' %}?item=100">The Complete Works of William Shakespeare by William Shakespeare (50107)</a></li>
+<li><a href="{% url 'edit_book' %}?item=2641">A Room with a View by E. M.  Forster (48767)</a></li>
+<li><a href="{% url 'edit_book' %}?item=11">Alice's Adventures in Wonderland by Lewis Carroll (46142)</a></li>
+<li><a href="{% url 'edit_book' %}?item=145">Middlemarch by George Eliot (45470)</a></li>
+<li><a href="{% url 'edit_book' %}?item=37106">Little Women; Or, Meg, Jo, Beth, and Amy by Louisa May Alcott (43245)</a></li>
+<li><a href="{% url 'edit_book' %}?item=16389">The Enchanted April by Elizabeth Von Arnim (40874)</a></li>
+<li><a href="{% url 'edit_book' %}?item=67979">The Blue Castle: a novel by L. M.  Montgomery (39849)</a></li>
+<li><a href="{% url 'edit_book' %}?item=394">Cranford by Elizabeth Cleghorn Gaskell (37603)</a></li>
+<li><a href="{% url 'edit_book' %}?item=6761">The Adventures of Ferdinand Count Fathom — Complete by T.  Smollett (35759)</a></li>
+<li><a href="{% url 'edit_book' %}?item=56812">A history of the Peninsular War, Vol. 4, Dec. 1810-Dec. 1811 : by Charles Oman (35678)</a></li>
+<li><a href="{% url 'edit_book' %}?item=62291">A history of the Peninsular War, Vol. 5, Oct. 1811-Aug. 31, 1812 : by Charles Oman (35476)</a></li>
+<li><a href="{% url 'edit_book' %}?item=54279">A history of the Peninsular War, Vol. 2, Jan.-Sep. 1809 : by Charles Oman (35414)</a></li>
+<li><a href="{% url 'edit_book' %}?item=46303">South Africa and the Transvaal War, Vol. 6 (of 8) by Louis Creswicke (35383)</a></li>
+<li><a href="{% url 'edit_book' %}?item=22914">The Sceptical Chymist by Robert Boyle (35294)</a></li>
+<li><a href="{% url 'edit_book' %}?item=23692">South Africa and the Transvaal War, Vol. 1 (of 8) by Louis Creswicke (35288)</a></li>
+<li><a href="{% url 'edit_book' %}?item=26198">South Africa and the Transvaal War, Vol. 2 (of 8) by Louis Creswicke (35287)</a></li>
+<li><a href="{% url 'edit_book' %}?item=55231">A history of the Peninsular War, Vol. 3, Sep. 1809-Dec. 1810 : by Charles Oman (35278)</a></li>
+<li><a href="{% url 'edit_book' %}?item=52026">Matthew Calbraith Perry: A Typical American Naval Officer by William Elliot Griffis (34980)</a></li>
+<li><a href="{% url 'edit_book' %}?item=5197">My Life — Volume 1 by Richard Wagner (34006)</a></li>
+<li><a href="{% url 'edit_book' %}?item=345">Dracula by Bram Stoker (29438)</a></li>
+<li><a href="{% url 'edit_book' %}?item=43">The Strange Case of Dr. Jekyll and Mr. Hyde by Robert Louis Stevenson (25735)</a></li>
+<li><a href="{% url 'edit_book' %}?item=26184">Simple Sabotage Field Manual by United States. Office of Strategic Services (24691)</a></li>
+<li><a href="{% url 'edit_book' %}?item=98">A Tale of Two Cities by Charles Dickens (22417)</a></li>
+<li><a href="{% url 'edit_book' %}?item=4300">Ulysses by James Joyce (22396)</a></li>
+<li><a href="{% url 'edit_book' %}?item=76">Adventures of Huckleberry Finn by Mark Twain (22095)</a></li>
+<li><a href="{% url 'edit_book' %}?item=74">The Adventures of Tom Sawyer, Complete by Mark Twain (21878)</a></li>
+<li><a href="{% url 'edit_book' %}?item=1260">Jane Eyre: An Autobiography by Charlotte Brontë (21342)</a></li>
+<li><a href="{% url 'edit_book' %}?item=1661">The Adventures of Sherlock Holmes by Arthur Conan Doyle (21195)</a></li>
+<li><a href="{% url 'edit_book' %}?item=45">Anne of Green Gables by L. M.  Montgomery (20567)</a></li>
+<li><a href="{% url 'edit_book' %}?item=1400">Great Expectations by Charles Dickens (18349)</a></li>
+<li><a href="{% url 'edit_book' %}?item=1184">The Count of Monte Cristo by Alexandre Dumas and Auguste Maquet (17977)</a></li>
+<li><a href="{% url 'edit_book' %}?item=70403">The miniature menace by Frank Belknap Long (17456)</a></li>
+<li><a href="{% url 'edit_book' %}?item=2600">War and Peace by graf Leo Tolstoy (17288)</a></li>
+<li><a href="{% url 'edit_book' %}?item=20782">Triplanetary by E. E.  Smith (16881)</a></li>
+<li><a href="{% url 'edit_book' %}?item=8800">The divine comedy by Dante Alighieri (16549)</a></li>
+<li><a href="{% url 'edit_book' %}?item=1952">The Yellow Wallpaper by Charlotte Perkins Gilman (16055)</a></li>
+<li><a href="{% url 'edit_book' %}?item=6130">The Iliad by Homer (16009)</a></li>
+<li><a href="{% url 'edit_book' %}?item=25344">The Scarlet Letter by Nathaniel Hawthorne (15062)</a></li>
+<li><a href="{% url 'edit_book' %}?item=41445">Frankenstein; Or, The Modern Prometheus by Mary Wollstonecraft Shelley (15034)</a></li>
+<li><a href="{% url 'edit_book' %}?item=27827">The Kama Sutra of Vatsyayana by Vatsyayana (14932)</a></li>
+<li><a href="{% url 'edit_book' %}?item=205">Walden, and On The Duty Of Civil Disobedience by Henry David Thoreau (14553)</a></li>
+<li><a href="{% url 'edit_book' %}?item=55">The Wonderful Wizard of Oz by L. Frank  Baum (12966)</a></li>
+<li><a href="{% url 'edit_book' %}?item=135">Les Misérables by Victor Hugo (12754)</a></li>
+<li><a href="{% url 'edit_book' %}?item=1727">The Odyssey by Homer (12691)</a></li>
+<li><a href="{% url 'edit_book' %}?item=46">A Christmas Carol in Prose; Being a Ghost Story of Christmas by Charles Dickens (12051)</a></li>
+<li><a href="{% url 'edit_book' %}?item=2852">The Hound of the Baskervilles by Arthur Conan Doyle (11848)</a></li>
+<li><a href="{% url 'edit_book' %}?item=72679">The lesser Key of Solomon, Goetia, the book of evil spirits : (11785)</a></li>
+<li><a href="{% url 'edit_book' %}?item=1399">Anna Karenina by graf Leo Tolstoy (10996)</a></li>
+<li><a href="{% url 'edit_book' %}?item=408">The Souls of Black Folk by W. E. B.  Du Bois (10917)</a></li>
+<li><a href="{% url 'edit_book' %}?item=16119">Doctrina Christiana (10902)</a></li>
+</ul>
+Or try a random book:<br>
+<form action="{% url 'edit_book' %}" method="get" id="choose-book"><input type="submit" name="item" value="?"></form>
+
+{% endblock %}
+
+</main>
+</body>
+</html>

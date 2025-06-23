@@ -16,10 +16,19 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic.base import TemplateView
 
 from rest_framework import routers, serializers, viewsets
 
-from altpoet.views import AltViewSet, DocumentViewSet, ImgViewSet, UserViewSet, UserSubmissionViewSet
+from altpoet.views import (
+    AltViewSet,
+    BookEditView,
+    DocumentViewSet,
+    HomepageView,
+    ImgViewSet,
+    UserViewSet,
+    UserSubmissionViewSet
+)
 
 
 # Routers provide an easy way of automatically determining the URL conf.
@@ -31,9 +40,13 @@ router.register(r'imgs', ImgViewSet)
 router.register(r'user_submissions', UserSubmissionViewSet)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('', HomepageView.as_view(), name='home'),
+    path('edit_book/', BookEditView.as_view(), name='edit_book'),
+    path('alttext/', TemplateView.as_view(template_name='alttext.html'), name='alttext'),
     path('', include('rest_framework.urls')),
+    path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path("accounts/", include("django.contrib.auth.urls")),
 ]
 
 
