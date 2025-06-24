@@ -12,6 +12,7 @@ psycopg2 = "*"
 django-cors-headers = "*"
 gunicorn = "*"
 anthropic = "*"
+requests = "*"
 
 [dev-packages]
 jupyter = "*"
