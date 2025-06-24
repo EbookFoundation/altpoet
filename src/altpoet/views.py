@@ -1,5 +1,10 @@
+from random import randint
+
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.views import generic
 
 from rest_framework.decorators import action
 
@@ -12,6 +17,42 @@ from altpoet.serializers import AltSerializer, DocumentSerializer, ImgSerializer
 from django.db import transaction
 from rest_framework.test import APIRequestFactory
 
+class HomepageView(generic.TemplateView):
+    template_name = 'index.html'
+
+    def get_context_data(self, **kwargs):
+        num_docs = Document.objects.count()
+        num_imgs = Img.objects.count()
+        done_alts = Img.objects.filter(alt__isnull=False).count()
+        rand_doc = Document.objects.get(id=randint(1, num_docs))
+        return {'num_docs': num_docs, 'num_imgs': num_imgs,
+                'done_alts': done_alts, 'rand_doc': rand_doc}
+
+class BookEditView(generic.View):
+    def editor_url(request, item):
+        host = request.get_host().split(':')[0]
+        url = f"{request.scheme}://{host}:8443/?book={item}"
+        print(url)
+        return url
+
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            print(request.GET)
+            book = request.GET.get('item', None)
+            if book and type(book) == list:
+                book = book[0]
+            try:
+                if book and book[0] == "?":
+                    item = randint(1, Document.objects.count())
+                    print(item)
+                    item = Document.objects.get(id=item).item
+                else:   
+                    item = Document.objects.get(item=book).item               
+                return HttpResponseRedirect(BookEditView.editor_url(request, item))
+            except Document.DoesNotExist:
+                return HttpResponse("hmmm... that book is not available for editing.")
+        else:
+            return HttpResponseRedirect(settings.LOGIN_URL)
 
 
 class UserViewSet(viewsets.ModelViewSet):

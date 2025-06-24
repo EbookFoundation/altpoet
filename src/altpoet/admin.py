@@ -4,21 +4,37 @@ from django.utils.safestring import mark_safe
 # Register your models here.
 
 from . import models
+from .ai import ai_alts
 
 admin.site.register(models.Project)
     
 
 @admin.register(models.Document)
 class DocumentAdmin(admin.ModelAdmin):
-    list_display = ('project_name', 'item', 'created', 'lang')
+    list_display = ('project_name', 'item', 'created', 'img_count', 'lang')
     date_hierarchy = 'created'
     ordering = ['item']
     readonly_fields = ('project', 'created', 'item')
     search_fields = ['item__exact']
+    actions = ['ai_alts']
 
     @admin.display(description="Project Name")
     def project_name(self, obj):
         return obj.project.name
+
+    @admin.action(description="Get AI descriptions")
+    def ai_alts(self, request, queryset):
+        numdocs = 0
+        alts = []
+        for document in queryset:
+            numdocs += 1
+            alts += ai_alts(document)
+        self.message_user(request, f'made {len(alts)} alt descriptions for {numdocs} documents')
+
+    @admin.display(description="img count")
+    def img_count(self, obj):
+        return str(obj.imgs.count())
+
 
 @admin.register(models.Img)
 class ImgAdmin(admin.ModelAdmin):
