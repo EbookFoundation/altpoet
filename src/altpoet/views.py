@@ -2,20 +2,33 @@ from random import randint
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.views import generic
 
-from rest_framework.decorators import action
-
 from rest_framework import generics, permissions, status, viewsets, exceptions
+from rest_framework.decorators import action
 from rest_framework.response import Response
-
-from altpoet.models import Project, Alt, Agent, Document, Img , UserSubmission
-from altpoet.serializers import AltSerializer, DocumentSerializer, ImgSerializer, UserSerializer, UserSubmissionSerializer
-
-from django.db import transaction
 from rest_framework.test import APIRequestFactory
+
+from altpoet.models import (
+    Alt,
+    Agent,
+    Document,
+    Img,
+    Project,
+    UserSubmission,
+)
+
+from altpoet.serializers import (
+    AltSerializer,
+    DocumentSerializer,
+    ImgSerializer,
+    UserSerializer,
+    UserSubmissionSerializer,
+)
+
 
 class HomepageView(generic.TemplateView):
     template_name = 'index.html'
@@ -66,7 +79,8 @@ class UserViewSet(viewsets.ModelViewSet):
         try:
             User.objects.get(username=username)
         except User.DoesNotExist:
-            return Response({'detail': "User " + username + "Doesn't Exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': "User " + username + "Doesn't Exist"},
+                status=status.HTTP_400_BAD_REQUEST)
         return Response({"username": username}, status=status.HTTP_200_OK)
 
 
@@ -95,7 +109,8 @@ class DocumentViewSet(viewsets.ModelViewSet):
         try:
             document = Document.objects.get(project=project, item=item)
         except Document.DoesNotExist:
-            return Response({'detail': "Document Doesn't Exist"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': "Document Doesn't Exist"},
+                status=status.HTTP_400_BAD_REQUEST)
         serializer = DocumentSerializer(document)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -108,6 +123,7 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     # alts_created [] in model
+
     def update_img_alt_texts(self, user_json, document, source, user_sub, user, username):
         for key, value in user_json.items():
             img = Img.objects.filter(document=document, img_id=key).get()
@@ -123,14 +139,17 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
         try:
             project = Project.objects.get(name='Project Gutenberg')
         except Project.DoesNotExist:
-            return Response({'detail': 'Project Gutenberg Was Not Set'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': 'Project Gutenberg Was Not Set'},
+                status=status.HTTP_404_NOT_FOUND)
         try:
             document = Document.objects.get(item=request.data.get('item', ''), project=project)
         except Document.DoesNotExist:
-            return Response({'detail': 'Document not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': 'Document not found'},
+                status=status.HTTP_404_NOT_FOUND)
         user_alt_text_json = request.data.get('user_alt_text_json', None)
         if user_alt_text_json is None:
-            return Response({'detail': '"user_alt_text_json" not found in request'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': '"user_alt_text_json" not found in request'},
+                status=status.HTTP_400_BAD_REQUEST)
         source = request.data.get('source', None)
         if source == None:
             source, created = Agent.objects.get_or_create(
@@ -148,13 +167,15 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
         except Img.DoesNotExist:
             return Response({'detail': 'Img not found' }, status=status.HTTP_404_NOT_FOUND)
         except Agent.DoesNotExist:
-            return Response({'detail': 'User not found: ' + request.user.username}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': 'User not found: ' + request.user.username},
+                status=status.HTTP_404_NOT_FOUND)
         except Alt.DoesNotExist:
             return Response({'detail': 'Alt not found'}, status=status.HTTP_404_NOT_FOUND)        
         
 
         serializer = UserSubmissionSerializer(user_sub)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     def get_queryset(self):
         """
         Optionally restricts the returned user submissions to a given user and document,
@@ -177,6 +198,7 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
                 return queryset.none()
             queryset = queryset.filter(document=document)
         return queryset
+
     def list(self, request, *args, **kwargs):
         # Check if both query parameters are present
         username = request.query_params.get('username')
@@ -243,21 +265,44 @@ class AltViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
         img.save()
         serializer = AltSerializer(alt)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     def update(self, request, *args, **kwargs):
         '''
         add user auth check to patch request
         '''
         text_source = self.get_object().source
         if(text_source == None):
-            return Response({'detail': "Alt Text Source Doesn't Exist"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': "Alt Text Source Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
         try: 
-            user = Agent.objects.get(user=request.user, name=request.user.username)
+            user = Agent.objects.get(user=request.user)
         except Agent.DoesNotExist:
-            return Response({'detail': "User Doesn't Exist"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': "User Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
         if(user != text_source):
-            return Response({'detail': "User Doesn't Have Permission To Edit"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': "User Doesn't Have Permission To Edit"},
+                status=status.HTTP_404_NOT_FOUND)
         # if ok to edit, use regular patch
         return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        '''
+        add user auth check to delete request
+        '''
+        text_source = self.get_object().source
+        if(text_source == None):
+            return Response({'detail': "Alt Text Source Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        try: 
+            user = Agent.objects.get(user=request.user)
+        except Agent.DoesNotExist:
+            return Response({'detail': "User Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        if(user != text_source):
+            return Response({'detail': "User Doesn't Have Permission To Edit"},
+                status=status.HTTP_404_NOT_FOUND)
+        # if ok to edit, use regular patch
+        return super().destroy(request, *args, **kwargs)
 
         
         
