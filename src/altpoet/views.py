@@ -251,13 +251,28 @@ class AltViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
         if(text_source == None):
             return Response({'detail': "Alt Text Source Doesn't Exist"}, status=status.HTTP_404_NOT_FOUND)
         try: 
-            user = Agent.objects.get(user=request.user, name=request.user.username)
+            user = Agent.objects.get(user=request.user)
         except Agent.DoesNotExist:
             return Response({'detail': "User Doesn't Exist"}, status=status.HTTP_404_NOT_FOUND)
         if(user != text_source):
             return Response({'detail': "User Doesn't Have Permission To Edit"}, status=status.HTTP_404_NOT_FOUND)
         # if ok to edit, use regular patch
         return super().update(request, *args, **kwargs)
+    def destroy(self, request, *args, **kwargs):
+        '''
+        add user auth check to delete request
+        '''
+        text_source = self.get_object().source
+        if(text_source == None):
+            return Response({'detail': "Alt Text Source Doesn't Exist"}, status=status.HTTP_404_NOT_FOUND)
+        try: 
+            user = Agent.objects.get(user=request.user)
+        except Agent.DoesNotExist:
+            return Response({'detail': "User Doesn't Exist"}, status=status.HTTP_404_NOT_FOUND)
+        if(user != text_source):
+            return Response({'detail': "User Doesn't Have Permission To Edit"}, status=status.HTTP_404_NOT_FOUND)
+        # if ok to edit, use regular patch
+        return super().destroy(request, *args, **kwargs)
 
         
         
