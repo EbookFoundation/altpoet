@@ -44,7 +44,7 @@ class HomepageView(generic.TemplateView):
 class BookEditView(generic.View):
     def editor_url(request, item):
         host = request.get_host().split(':')[0]
-        url = f"{request.scheme}://{host}:8443/?book={item}"
+        url = f"{request.scheme}://{host}:8443/alttext/?book={item}"
         print(url)
         return url
 
