@@ -238,6 +238,7 @@ class AltViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
     queryset = Alt.objects.all().order_by('-created')
     serializer_class = AltSerializer
     permission_classes = [permissions.IsAuthenticated]
+
     def create(self, request, *args, **kwargs):
         '''
         creates a new alt, and sets it in the specified img
