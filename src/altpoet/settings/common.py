@@ -165,8 +165,17 @@ LOGGING = {
             'backupCount': 5,
             'filename': 'logs/altpoet.log',
         },
+        'null': {
+            'level': 'DEBUG',
+            'class': 'logging.NullHandler',
+        },
     },
     'loggers': {
+        'django.security.DisallowedHost': {
+            'handlers': ['null'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
         '': {
             'handlers': ['file'],
             'level': 'INFO',
