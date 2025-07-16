@@ -122,6 +122,32 @@ class Image(models.Model):
             models.Index(fields=["hash"]),
         ]
 
+class UserAltVote(models.Model):
+    """Relation table between users and alts to keep track of votes
+    """
+
+    user = models.ForeignKey("Agent", null=False, related_name='voter', on_delete=models.CASCADE)
+
+    alt = models.ForeignKey("Alt", null=False, related_name='alt_voted',  on_delete=models.CASCADE)
+
+    UPVOTE = "UP"
+    DOWNVOTE = "DN"
+    NONEVOTE = "NO"
+    VOTE_CHOICES = [(UPVOTE, "Upvote"),
+        (DOWNVOTE, "Downvote"),
+        (NONEVOTE, "No vote"),]
+
+    vote = models.CharField(
+        max_length=2,
+        choices=VOTE_CHOICES,
+        default=NONEVOTE
+    )
+
+    class Meta: 
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'alt'], name="alt_vote_unique_per_user"),
+            ]
+
 # add unique constraint to tuple (user, image, document)
 # one submission per image in document
 class Alt(models.Model):
@@ -129,6 +155,9 @@ class Alt(models.Model):
     """
     # alt text for the image
     text = models.CharField(max_length=2000, default="")
+
+    # 
+    votes = models.IntegerField(default=0, null=False)
     
     # the img that this alt-text pertains to
     img = models.ForeignKey("Img", null=True, related_name='alts',  on_delete=models.CASCADE)

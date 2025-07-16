@@ -29,7 +29,7 @@ class AltSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Alt
-        fields = ['id', 'img', 'text', 'source', 'user_sub', 'created']
+        fields = ['id', 'img', 'text', 'source', 'votes', 'user_sub', 'created']
 
 
 class ImgSerializer(serializers.ModelSerializer):
