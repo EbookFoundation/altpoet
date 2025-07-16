@@ -282,7 +282,7 @@ class AltViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
         creates a new alt, and sets it in the specified img
         '''
         try:
-            img = Img.objects.get(id=request.data.get('img', ''))
+            img = Img.objects.get(id=request.data.get('img', None))
         except Img.DoesNotExist:
             return Response({'detail': 'Img not found'}, status=status.HTTP_404_NOT_FOUND)
         text = request.data.get('text', '')
