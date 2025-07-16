@@ -19,6 +19,7 @@ from altpoet.models import (
     Img,
     Project,
     UserSubmission,
+    UserAltVote,
 )
 
 from altpoet.serializers import (
@@ -238,6 +239,43 @@ class AltViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
     queryset = Alt.objects.all().order_by('-created')
     serializer_class = AltSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def calculate_vote(self, curr_vote, next_vote):
+        if(curr_vote == next_vote):
+            return 0
+        elif (curr_vote == "NO" and next_vote == "UP") or (curr_vote == "DN" and next_vote == "NO"):
+            return 1
+        elif (curr_vote == "UP" and next_vote == "NO") or (curr_vote == "NO" and next_vote == "DN"):
+            return -1
+        elif (curr_vote == "DN" and next_vote == "UP"):
+            return 2
+        elif (curr_vote == "UP" and next_vote == "DN"):
+            return -2
+        else:
+            return 0
+
+    @action(detail=True, methods=['POST'])
+    def vote(self, request, *args, **kwargs):
+        vote = request.data.get("vote", None)
+        if vote == None:
+            return Response({'detail': 'No vote sent'}, status=status.HTTP_400_BAD_REQUEST)
+        try: 
+            user = Agent.objects.get(user=request.user)
+        except Agent.DoesNotExist:
+            return Response({'detail': "User Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        try:
+            alt = self.get_object()
+        except Alt.DoesNotExist:
+            return Response({'detail': "Alt Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        with transaction.atomic():
+            curr_vote, created = UserAltVote.objects.get_or_create(user=user, alt=alt)
+            alt.votes = alt.votes + self.calculate_vote(curr_vote.vote, vote)
+            alt.save()
+            curr_vote.vote = vote
+            curr_vote.save()
+        return Response({'votes': alt.votes}, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         '''
