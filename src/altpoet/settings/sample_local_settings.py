@@ -46,3 +46,14 @@ DATABASES = {
 
 
 ANTHROPIC_API_KEY = 'aojfeahefueggfueqfuh[qghq0hqfaovhreqoihg'
+
+
+# settings for outbound email
+# if you have a gmail account you can use your email address and an app password
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+DEFAULT_FROM_EMAIL = 'eric@example.com'
+EMAIL_HOST_USER = 'eric@example.com'
+EMAIL_HOST_PASSWORD = 'xxxxxxxxxxxxxxxx'

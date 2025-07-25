@@ -59,7 +59,9 @@ ROOT_URLCONF = 'altpoet.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, "altpoet", "templates"),
+                 os.path.join(BASE_DIR, "altpoet", "templates", "registration"),
+                 ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

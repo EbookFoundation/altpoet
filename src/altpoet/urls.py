@@ -17,6 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic.base import TemplateView
+from django.contrib.auth.views import (
+    LoginView,
+    PasswordResetView,
+    PasswordResetDoneView,
+    PasswordResetConfirmView,
+)
+
 
 from rest_framework import routers, serializers, viewsets
 
@@ -43,10 +50,17 @@ urlpatterns = [
     path('', HomepageView.as_view(), name='home'),
     path('edit_book/', BookEditView.as_view(), name='edit_book'),
     path('alttext/', TemplateView.as_view(template_name='alttext.html'), name='alttext'),
-    path('', include('rest_framework.urls')),
-    path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    
+    # registration. the rest of the templates are in admin view.
+    path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('accounts/password_reset/',
+        PasswordResetView.as_view(template_name='registration/password_reset.html'),
+        name='password_reset'),
+
     path("accounts/", include("django.contrib.auth.urls")),
+    path('admin/', admin.site.urls),
+    path('', include('rest_framework.urls')),
 ]
 
 
