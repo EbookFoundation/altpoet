@@ -1,21 +1,17 @@
+{% extends "base.html" %}
 {% load static %}
-<html>
-<head>
-<title>Free Ebook Foundation's AltPoet</title>
-{% include "basestyle.html" %}
-</head>
-<body>
-{% include "header.html" %}
-<main class="section alt-topic">
-		<div class="container">
-		<div class="content">
+{% load static %}
+
+{% block title %}Free Ebook Foundation's AltPoet{% endblock %}
+
+{% block content %}
 <h1>
 Welcome to AltPoet!
 </h1>
 <p style='box-sizing: content-box'>
 This website enables the editing and creation of alt-text descriptions to make Project Gutenberg ebooks accesible to the blind and vision-impaired. 
 </p>
-{% block content %}
+
 {% if form.errors and not form.non_field_errors %}
 <p class="errornote">
 Please correct the error below. Please correct the errors below.
@@ -111,9 +107,7 @@ Most downloaded:
 </ul>
 Or try a random book:<br>
 <form action="{% url 'edit_book' %}" method="get" id="choose-book"><input type="submit" name="item" value="?"></form>
-
+</main>
 {% endblock %}
 
-</main>
-</body>
-</html>
+
