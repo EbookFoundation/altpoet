@@ -253,6 +253,26 @@ class AltViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
             return -2
         else:
             return 0
+        
+    
+    @action(detail=True, methods=['GET'])
+    def get_vote(self, request, *args, **kwargs):
+        try: 
+            user = Agent.objects.get(user=request.user)
+        except Agent.DoesNotExist:
+            return Response({'detail': "User Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        try:
+            alt = self.get_object()
+        except Alt.DoesNotExist:
+            return Response({'detail': "Alt Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        try:
+            user_alt_vote = UserAltVote.objects.get(user=user, alt=alt)
+        except UserAltVote.DoesNotExist:
+            # return 200 ok here because dne will occur if user hasn't voted yet
+            return Response({'vote': "NO"},status=status.HTTP_200_OK)
+        return Response({'vote': user_alt_vote.vote},status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['POST'])
     def vote(self, request, *args, **kwargs):
