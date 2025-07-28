@@ -1,14 +1,11 @@
+{% extends "base.html" %}
 {% load static %}
-<html>
-<head>
-<title>Creating Good Alt Text</title>
-{% include "basestyle.html" %}
-</head>
-<body>
-{% include "header.html" %}
-<main class="section alt-topic">
-		<div class="container">
-		<div class="content">
+
+{% block title %}Creating Good Alt Text{% endblock %}
+
+{% block content %}
+<div class="container alt-topic">
+<div class="content">
 <h1>
 Creating Good Alt Text
 </h1>
@@ -53,7 +50,6 @@ Creating Good Alt Text
 <dd>Some abbreviations will not read “correctly” to your ear when you listen to them with a screen reader. Your first thought may be to engineer it phonetically to read correctly. The term ADA for example can be read aloud like Ada Lovelace instead of the abbreviation for the Americans with Disabilities Act which phonetically is pronounced like Eh Dee Eh. Whereas this approach works well for screen reader users it will not work for Braille display users.
 </dd>
 </dl>
-</main>
-
-</body>
-</html>
+</div>
+</div>
+{% endblock %}  
