@@ -94,6 +94,29 @@ class DocumentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 
+    # same as get_project_item, but doesn't serialize and return document
+    # for checking if doc exists in database before loading page
+    @action(detail=False, methods=["GET"], url_path='doc-check', 
+            url_name='doc-check')
+    def check_doc_by_item(self, request, *args, **kwargs):
+        project = request.query_params.get('project')
+        item = request.query_params.get('item')
+        if project is None:
+            return Response({'detail': "Project Not Found"}, status=status.HTTP_400_BAD_REQUEST)
+        try: 
+            project = Project.objects.get(name=project)
+        except:
+            return Response({'detail': "Project Not Found"}, status=status.HTTP_400_BAD_REQUEST)
+        if item is None:
+                return Response({'detail': "Item Not Found"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            document = Document.objects.get(project=project, item=item)
+        except Document.DoesNotExist:
+            return Response({'detail': "Document Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_200_OK)
+
+
     @action(detail=False, methods=["GET"], url_path='get-project-item', 
             url_name='get-project-item')
     def get_project_item(self, request, *args, **kwargs):
