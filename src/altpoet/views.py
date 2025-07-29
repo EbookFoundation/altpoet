@@ -138,6 +138,18 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer = DocumentSerializer(document)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['POST'], url_path='add_ai_alts', 
+            url_name='add_ai_alts', name='Add AI Alts')
+    def add_ai_alts(self, request, pk=None):
+        document = self.get_object()
+        if not document:
+            return Response({'detail': "Document Not Found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        document.add_ai_alts()
+        serializer = DocumentSerializer(document)
+        return Response({'status': 'AI suggestions added'})
+
+
 class UserSubmissionViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows user JSON alt text submissions to be viewed or edited.
