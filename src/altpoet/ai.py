@@ -31,7 +31,7 @@ def ai_alts(document):
     for img in imgs:
         # handle lines
         if img.image.x < 3 or img.image.y < 3:
-            new_alt = Alt.objects.create(img=img, text='[decorative image]')
+            new_alt, created = Alt.objects.get_or_create(img=img, text='[decorative image]')
             continue
     
         img_url = img.image.url
@@ -48,20 +48,23 @@ def ai_alts(document):
         # already done the image for another img
         if img_url in done_urls:
             done_alt = done_urls[img_url]
-            new_alt = Alt.objects.create(img=img, text=done_alt.text, source=done_alt.source)
+            new_alt, created = Alt.objects.get_or_create(
+                img=img, text=done_alt.text, source=done_alt.source)
             continue
     
         # duplicate image in another book (same hash) 
-        duplicates = Alt.objects.filter(img__image__hash=img.image.hash)
+        duplicates = Alt.objects.filter(img__image__hash=img.image.hash).exclude(img=img)
         # ... with a preferred alt
         for dupe in duplicates.filter(img__alt__isnull=False).order_by('-created'):
-            new_alt = Alt.objects.create(img=img, text=dupe.text, source=dupe.source)
+            new_alt, created = Alt.objects.get_or_create(
+                img=img, text=dupe.text, source=dupe.source)
             break
         if new_alt:
             continue
         # ... or with same source as current
         for dupe in duplicates.filter(source=ai_agent()).order_by('-created'):
-            new_alt = Alt.objects.create(img=img, text=dupe.text, source=dupe.source)
+            new_alt, created = Alt.objects.get_or_create(
+                img=img, text=dupe.text, source=dupe.source)
             break
         if new_alt:
             continue       
@@ -110,7 +113,8 @@ def ai_alts(document):
             messages=message_list,
             temperature=0.0
         )
-        new_alt = Alt.objects.create(img=img, text=response.content[0].text, source=ai_agent())
+        new_alt, created = Alt.objects.get_or_create(
+            img=img, text=response.content[0].text, source=ai_agent())
         done_urls[img_url] = new_alt
     logger.info(f'returned {len(done_urls)} alts for document #{docnum}')
     return done_urls.values()
