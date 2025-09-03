@@ -46,9 +46,14 @@ class ImgSerializer(serializers.ModelSerializer):
 class DocumentSerializer(serializers.ModelSerializer):
     project = serializers.SlugRelatedField(many=False, read_only=True, slug_field='name')
     imgs = ImgSerializer(many=True, read_only=True)
+    detail = serializers.SerializerMethodField()
+    _detail = ''
+    def get_detail(self, obj):
+            return self._detail or "ok"
+
     class Meta:
         model = Document
-        fields = ['project', 'id', 'item', 'base', 'imgs']
+        fields = ['project', 'id', 'item', 'base', 'imgs', 'detail']
 
 class UserSubmissionSerializer(serializers.ModelSerializer):
     source = serializers.SlugRelatedField(

@@ -114,7 +114,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         except Document.DoesNotExist:
             return Response({'detail': "Document Doesn't Exist"},
                 status=status.HTTP_404_NOT_FOUND)
-        return Response(status=status.HTTP_200_OK)
+        return Response({'detail': "ok"}, status=status.HTTP_200_OK)
 
 
     @action(detail=False, methods=["GET"], url_path='get-project-item', 
@@ -137,6 +137,19 @@ class DocumentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST)
         serializer = DocumentSerializer(document)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['POST'], url_path='add_ai_alts', 
+            url_name='add_ai_alts', name='Add AI Alts')
+    def add_ai_alts(self, request, pk=None):
+        document = self.get_object()
+        if not document:
+            return Response({'detail': "Document Not Found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        document.add_ai_alts()
+        serializer = DocumentSerializer(document)
+        serializer._detail = 'AI suggestions added'
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class UserSubmissionViewSet(viewsets.ModelViewSet):
     """
