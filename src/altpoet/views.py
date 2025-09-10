@@ -114,7 +114,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         except Document.DoesNotExist:
             return Response({'detail': "Document Doesn't Exist"},
                 status=status.HTTP_404_NOT_FOUND)
-        return Response({'detail': "ok"}, status=status.HTTP_200_OK)
+        return Response({'pk': document.id}, status=status.HTTP_200_OK)
 
 
     @action(detail=False, methods=["GET"], url_path='get-project-item', 
