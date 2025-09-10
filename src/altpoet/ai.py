@@ -30,8 +30,8 @@ def ai_alts(document):
     done_urls = {}
     for img in imgs:
         # handle lines
-        if img.image.x < 3 or img.image.y < 3:
-            new_alt, created = Alt.objects.get_or_create(img=img, text='[decorative image]')
+        if img.image.x != None and img.image.y != None and (img.image.x < 3 or img.image.y < 3):
+            new_alt, created = Alt.objects.get_or_create(img=img, defaults={"text": "[decorative image]"})
             continue
     
         img_url = img.image.url
@@ -49,7 +49,7 @@ def ai_alts(document):
         if img_url in done_urls:
             done_alt = done_urls[img_url]
             new_alt, created = Alt.objects.get_or_create(
-                img=img, text=done_alt.text, source=done_alt.source)
+                img=img, source=done_alt.source, defaults={"text": done_alt.text})
             continue
     
         # duplicate image in another book (same hash) 
@@ -57,14 +57,14 @@ def ai_alts(document):
         # ... with a preferred alt
         for dupe in duplicates.filter(img__alt__isnull=False).order_by('-created'):
             new_alt, created = Alt.objects.get_or_create(
-                img=img, text=dupe.text, source=dupe.source)
+                img=img, source=dupe.source, defaults={"text": dupe.text})
             break
         if new_alt:
             continue
         # ... or with same source as current
         for dupe in duplicates.filter(source=ai_agent()).order_by('-created'):
             new_alt, created = Alt.objects.get_or_create(
-                img=img, text=dupe.text, source=dupe.source)
+                img=img, source=dupe.source, defaults={"text": dupe.text})
             break
         if new_alt:
             continue       
@@ -114,7 +114,7 @@ def ai_alts(document):
             temperature=0.0
         )
         new_alt, created = Alt.objects.get_or_create(
-            img=img, text=response.content[0].text, source=ai_agent())
+            img=img, source=ai_agent(), defaults={"text": response.content[0].text})
         done_urls[img_url] = new_alt
     logger.info(f'returned {len(done_urls)} alts for document #{docnum}')
     return done_urls.values()
