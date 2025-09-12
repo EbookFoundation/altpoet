@@ -29,9 +29,14 @@ def ai_alts(document):
     logger.info(f'getting ai alt text for {numimgs} img elements in document {docnum}')
     done_urls = {}
     for img in imgs:
-        # handle lines
-        if img.image.x < 3 or img.image.y < 3:
-            new_alt, created = Alt.objects.get_or_create(img=img, text='[decorative image]')
+        # handle lines (don't send to AI)
+        if img.image.x != None and img.image.y != None and (img.image.x < 3 or img.image.y < 3):
+            new_alt, created = Alt.objects.get_or_create(
+                img=img, source=None, defaults={"text": "[decorative image]"})
+            if not created:
+                # need to change the existing alt text
+                new_alt.text = "[decorative image]"
+                new_alt.save()
             continue
     
         img_url = img.image.url
@@ -49,7 +54,8 @@ def ai_alts(document):
         if img_url in done_urls:
             done_alt = done_urls[img_url]
             new_alt, created = Alt.objects.get_or_create(
-                img=img, text=done_alt.text, source=done_alt.source)
+                # won't overwrite previous alt text
+                img=img, source=done_alt.source, defaults={"text": done_alt.text})
             continue
     
         # duplicate image in another book (same hash) 
@@ -57,14 +63,16 @@ def ai_alts(document):
         # ... with a preferred alt
         for dupe in duplicates.filter(img__alt__isnull=False).order_by('-created'):
             new_alt, created = Alt.objects.get_or_create(
-                img=img, text=dupe.text, source=dupe.source)
+                # won't overwrite previous alt text
+                img=img, source=dupe.source, defaults={"text": dupe.text})
             break
         if new_alt:
             continue
         # ... or with same source as current
         for dupe in duplicates.filter(source=ai_agent()).order_by('-created'):
             new_alt, created = Alt.objects.get_or_create(
-                img=img, text=dupe.text, source=dupe.source)
+                # won't overwrite previous alt text
+                img=img, source=dupe.source, defaults={"text": dupe.text})
             break
         if new_alt:
             continue       
@@ -107,14 +115,19 @@ def ai_alts(document):
             }
         ]
     
-        response = client.messages.create(
-            model=MODEL_NAME,
-            max_tokens=2048,
-            messages=message_list,
-            temperature=0.0
-        )
-        new_alt, created = Alt.objects.get_or_create(
-            img=img, text=response.content[0].text, source=ai_agent())
+        # don't repeat a lookup        
+        try:
+            new_alt = Alt.objects.get(img=img, source=ai_agent())
+        except Alt.DoesNotExist:
+            response = client.messages.create(
+                model=MODEL_NAME,
+                max_tokens=2048,
+                messages=message_list,
+                temperature=0.0
+            )
+            new_alt = Alt(img=img, source=ai_agent(), text=response.content[0].text)
+            new_alt.save()
+
         done_urls[img_url] = new_alt
     logger.info(f'returned {len(done_urls)} alts for document #{docnum}')
     return done_urls.values()
