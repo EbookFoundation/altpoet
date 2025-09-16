@@ -169,8 +169,9 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
                                                             "text": value,
                                                             "user_sub": user_sub
                                                         })
-            img.alt = alt
-            img.save()
+            if(Alt.objects.filter(img=img).count() == 1):
+                img.alt = alt
+                img.save()
                                 
     def create(self, request, *args, **kwargs):
         try:
@@ -356,8 +357,9 @@ class AltViewSet(viewsets.ModelViewSet, generics.CreateAPIView):
                                                         "text": text,
                                                         "user_sub": user_sub
                                                     })
-        img.alt = alt
-        img.save()
+        if(Alt.objects.filter(img=img).count() == 1):
+            img.alt = alt
+            img.save()
         serializer = AltSerializer(alt)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
