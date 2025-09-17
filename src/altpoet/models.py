@@ -212,7 +212,7 @@ class UserSubmission(models.Model):
         (IN_PROGRESS, "In Progress"),
         (COMPLETE, "Complete"),]
 
-    user_status = models.IntegerField(
+    status = models.IntegerField(
         choices=statuses,
         default=IN_PROGRESS
     )
