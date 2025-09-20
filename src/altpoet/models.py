@@ -205,6 +205,18 @@ class UserSubmission(models.Model):
     
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
+    NO_PROGRESS = 0
+    IN_PROGRESS = 1
+    COMPLETE = 2
+    statuses = [(NO_PROGRESS, "No Progress"),
+        (IN_PROGRESS, "In Progress"),
+        (COMPLETE, "Complete"),]
+
+    status = models.IntegerField(
+        choices=statuses,
+        default=IN_PROGRESS
+    )
+
     def __str__(self):
         return f'user submission for {self.document} by {self.source}'
 

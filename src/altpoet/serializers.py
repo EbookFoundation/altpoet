@@ -63,7 +63,9 @@ class UserSubmissionSerializer(serializers.ModelSerializer):
     
     document = serializers.SlugRelatedField(many=False, read_only=True, slug_field='item')
 
+    status = serializers.CharField(source='get_status_display')
+
     class Meta:
         model = UserSubmission
-        fields = ['id', 'source', 'document', 'alts_created', 'created']
+        fields = ['id', 'source', 'document', 'status', 'alts_created', 'created']
         
