@@ -214,6 +214,11 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
         serializer = UserSubmissionSerializer(user_sub)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
+    def validate_status(self, status):
+        if(status == 0 or status == 1 or status == 2):
+            return True
+        return False
+    
     @action(detail=True, methods=['GET'])
     def get_status(self, request, *args, **kwargs):
         try: 
@@ -233,6 +238,8 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
         user_status = request.data.get("status", None)
         if user_status == None:
             return Response({'detail': 'No status sent'}, status=status.HTTP_400_BAD_REQUEST)
+        if not self.validate_status(user_status):
+            return Response({'detail': 'Invalid Status'}, status=status.HTTP_400_BAD_REQUEST)
         try: 
             user = Agent.objects.get(user=request.user)
         except Agent.DoesNotExist:
