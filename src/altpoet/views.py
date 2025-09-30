@@ -213,6 +213,39 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
 
         serializer = UserSubmissionSerializer(user_sub)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=True, methods=['GET'])
+    def get_status(self, request, *args, **kwargs):
+        try: 
+            user = Agent.objects.get(user=request.user)
+        except Agent.DoesNotExist:
+            return Response({'detail': "User Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        try:
+            user_sub = self.get_object()
+        except UserSubmission.DoesNotExist:
+            return Response({'detail': "User Submission Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        return Response({'status': user_sub.get_status_display(), 'detail': "OK"}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['POST'])
+    def set_status(self, request, *args, **kwargs):
+        user_status = request.data.get("status", None)
+        if user_status == None:
+            return Response({'detail': 'No status sent'}, status=status.HTTP_400_BAD_REQUEST)
+        try: 
+            user = Agent.objects.get(user=request.user)
+        except Agent.DoesNotExist:
+            return Response({'detail': "User Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        try:
+            user_sub = self.get_object()
+        except Alt.DoesNotExist:
+            return Response({'detail': "User Submission Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        user_sub.status = user_status
+        user_sub.save()
+        return Response({'status': user_sub.get_status_display(), 'detail': "OK"}, status=status.HTTP_200_OK)
 
     def get_queryset(self):
         """
