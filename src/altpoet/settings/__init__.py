@@ -1,1 +1,1 @@
-from .local_settings import *
+from .sample_local_settings import *

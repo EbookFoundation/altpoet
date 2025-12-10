@@ -1,7 +1,8 @@
 from random import randint
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
+from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -114,7 +115,61 @@ class DocumentViewSet(viewsets.ModelViewSet):
         except Document.DoesNotExist:
             return Response({'detail': "Document Doesn't Exist"},
                 status=status.HTTP_404_NOT_FOUND)
-        return Response({'id': document.id, 'detail': 'ok'}, status=status.HTTP_200_OK)
+        return Response({'id': document.id, 'status': document.status, 'detail': 'ok'}, status=status.HTTP_200_OK)
+    
+    def validate_status(self, status):
+        if(status == 0 or status == 1 or status == 2):
+            return True
+        return False
+
+    @action(detail=True, methods=['GET'])
+    def get_status(self, request, *args, **kwargs):
+        try: 
+            user = Agent.objects.get(user=request.user)
+        except Agent.DoesNotExist:
+            return Response({'detail': "User Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        try:
+            document = self.get_object()
+        except Document.DoesNotExist:
+            return Response({'detail': "Document Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        return Response({'status': document.status, 'detail': "OK"}, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['POST'])
+    def set_status(self, request, *args, **kwargs):
+        user_status = request.data.get("status", None)
+        if user_status == None:
+            return Response({'detail': 'No status sent'}, status=status.HTTP_400_BAD_REQUEST)
+        if not self.validate_status(user_status):
+            return Response({'detail': 'Invalid Status'}, status=status.HTTP_400_BAD_REQUEST)
+        try: 
+            agent = Agent.objects.get(user=request.user)
+        except Agent.DoesNotExist:
+            return Response({'detail': "User Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        try:
+            document = self.get_object()
+        except Document.DoesNotExist:
+            return Response({'detail': "Document Doesn't Exist"},
+                status=status.HTTP_404_NOT_FOUND)
+        try:
+            content_type = ContentType.objects.get_for_model(Document)
+            perms = Permission.objects.filter(content_type=content_type)
+            for perm in perms:
+                if(request.user.has_perm(perm=perm)):
+                    document.status = user_status
+                    document.save()
+                    return Response({'status': document.status, 'detail': "OK"}, status=status.HTTP_200_OK)
+            document.review_urgency += 1
+            document.save()
+            return Response({'status': document.status, 
+                             'detail': 'Not Authorized To Set Status, Increased Review Urgency'}, 
+                             status=status.HTTP_200_OK)
+        except (User.DoesNotExist, Permission.DoesNotExist):
+            document.status = user_status
+            document.save()
+        return Response({'status': document.status, 'detail': "OK"}, status=status.HTTP_200_OK)
 
 
     @action(detail=False, methods=["GET"], url_path='get-project-item', 
@@ -149,7 +204,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         serializer = DocumentSerializer(document)
         serializer._detail = 'AI suggestions added'
         return Response(serializer.data, status=status.HTTP_200_OK)
-
+    
 
 class UserSubmissionViewSet(viewsets.ModelViewSet):
     """
@@ -213,46 +268,6 @@ class UserSubmissionViewSet(viewsets.ModelViewSet):
 
         serializer = UserSubmissionSerializer(user_sub)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-    def validate_status(self, status):
-        if(status == 0 or status == 1 or status == 2):
-            return True
-        return False
-    
-    @action(detail=True, methods=['GET'])
-    def get_status(self, request, *args, **kwargs):
-        try: 
-            user = Agent.objects.get(user=request.user)
-        except Agent.DoesNotExist:
-            return Response({'detail': "User Doesn't Exist"},
-                status=status.HTTP_404_NOT_FOUND)
-        try:
-            user_sub = self.get_object()
-        except UserSubmission.DoesNotExist:
-            return Response({'detail': "User Submission Doesn't Exist"},
-                status=status.HTTP_404_NOT_FOUND)
-        return Response({'status': user_sub.get_status_display(), 'detail': "OK"}, status=status.HTTP_200_OK)
-
-    @action(detail=True, methods=['POST'])
-    def set_status(self, request, *args, **kwargs):
-        user_status = request.data.get("status", None)
-        if user_status == None:
-            return Response({'detail': 'No status sent'}, status=status.HTTP_400_BAD_REQUEST)
-        if not self.validate_status(user_status):
-            return Response({'detail': 'Invalid Status'}, status=status.HTTP_400_BAD_REQUEST)
-        try: 
-            user = Agent.objects.get(user=request.user)
-        except Agent.DoesNotExist:
-            return Response({'detail': "User Doesn't Exist"},
-                status=status.HTTP_404_NOT_FOUND)
-        try:
-            user_sub = self.get_object()
-        except Alt.DoesNotExist:
-            return Response({'detail': "User Submission Doesn't Exist"},
-                status=status.HTTP_404_NOT_FOUND)
-        user_sub.status = user_status
-        user_sub.save()
-        return Response({'status': user_sub.get_status_display(), 'detail': "OK"}, status=status.HTTP_200_OK)
 
     def get_queryset(self):
         """
