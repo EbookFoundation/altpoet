@@ -1,7 +1,8 @@
 from random import randint
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
+from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -143,7 +144,7 @@ class DocumentViewSet(viewsets.ModelViewSet):
         if not self.validate_status(user_status):
             return Response({'detail': 'Invalid Status'}, status=status.HTTP_400_BAD_REQUEST)
         try: 
-            user = Agent.objects.get(user=request.user)
+            agent = Agent.objects.get(user=request.user)
         except Agent.DoesNotExist:
             return Response({'detail': "User Doesn't Exist"},
                 status=status.HTTP_404_NOT_FOUND)
@@ -152,8 +153,22 @@ class DocumentViewSet(viewsets.ModelViewSet):
         except Document.DoesNotExist:
             return Response({'detail': "Document Doesn't Exist"},
                 status=status.HTTP_404_NOT_FOUND)
-        document.status = user_status
-        document.save()
+        try:
+            content_type = ContentType.objects.get_for_model(Document)
+            perms = Permission.objects.filter(content_type=content_type)
+            for perm in perms:
+                if(request.user.has_perm(perm=perm)):
+                    document.status = user_status
+                    document.save()
+                    return Response({'status': document.status, 'detail': "OK"}, status=status.HTTP_200_OK)
+            document.review_urgency += 1
+            document.save()
+            return Response({'status': document.status, 
+                             'detail': 'Not Authorized To Set Status, Increased Review Urgency'}, 
+                             status=status.HTTP_200_OK)
+        except (User.DoesNotExist, Permission.DoesNotExist):
+            document.status = user_status
+            document.save()
         return Response({'status': document.status, 'detail': "OK"}, status=status.HTTP_200_OK)
 
 

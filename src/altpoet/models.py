@@ -55,6 +55,8 @@ class Document(models.Model):
         default=IN_PROGRESS
     )
 
+    review_urgency = models.IntegerField(default=0)
+
     @property
     def url(self):
         if self.project:
