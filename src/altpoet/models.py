@@ -43,6 +43,20 @@ class Document(models.Model):
     
     lang = models.CharField(max_length=10, default="en")
 
+    NO_PROGRESS = 0
+    IN_PROGRESS = 1
+    COMPLETE = 2
+    statuses = [(NO_PROGRESS, "No Progress"),
+        (IN_PROGRESS, "In Progress"),
+        (COMPLETE, "Complete"),]
+
+    status = models.IntegerField(
+        choices=statuses,
+        default=IN_PROGRESS
+    )
+
+    review_urgency = models.IntegerField(default=0)
+
     @property
     def url(self):
         if self.project:
@@ -58,6 +72,11 @@ class Document(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['project', 'item'], name="doc_unique_in_project"),
+        ]
+
+        permissions = [
+            ("change_submission_status_tier_one", "Can change the status of this document if submitted by tier 0 (volunteer, non-staff)"),
+            ("change_submission_status_tier_two", "Can always change the status of this document")
         ]
     
 class Img(models.Model):
@@ -93,6 +112,10 @@ class Img(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['document', 'img_id'], name="img_unique_in_doc"),
+        ]
+
+        permissions = [
+            ("set_preferred_alt", "Can set the preferred alt text for this image")
         ]
 
 class Image(models.Model):
@@ -204,18 +227,6 @@ class UserSubmission(models.Model):
         on_delete=models.CASCADE)
     
     created = models.DateTimeField(auto_now_add=True, db_index=True)
-
-    NO_PROGRESS = 0
-    IN_PROGRESS = 1
-    COMPLETE = 2
-    statuses = [(NO_PROGRESS, "No Progress"),
-        (IN_PROGRESS, "In Progress"),
-        (COMPLETE, "Complete"),]
-
-    status = models.IntegerField(
-        choices=statuses,
-        default=IN_PROGRESS
-    )
 
     def __str__(self):
         return f'user submission for {self.document} by {self.source}'
